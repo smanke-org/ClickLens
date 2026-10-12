@@ -1,7 +1,7 @@
 #!/usr/bin/env swift
 // Generates the app icon in the same periodic-table style as M3 Tracker: atomic number
-// "29", tipped 45° to the left, the "Cl" symbol, and the name along the bottom, on
-// a warm spotlight-yellow tile.
+// "27", tipped 45° to the left, the "Cl" symbol, and the name along the bottom, on
+// a saturated gold tile, matching the sibling apps.
 // Run with:
 //   swift Tools/generate_icon.swift
 //
@@ -31,7 +31,7 @@ let cornerRadius = side * 0.215
 
 let tilePath = CGPath(roundedRect: tile, cornerWidth: cornerRadius, cornerHeight: cornerRadius, transform: nil)
 
-// MARK: - Yellow body
+// MARK: - Gold body
 
 ctx.saveGState()
 ctx.addPath(tilePath)
@@ -39,8 +39,8 @@ ctx.clip()
 
 let colorSpace = CGColorSpaceCreateDeviceRGB()
 let bodyColors = [
-    NSColor(srgbRed: 1.00, green: 0.88, blue: 0.40, alpha: 1.0).cgColor,
-    NSColor(srgbRed: 0.98, green: 0.68, blue: 0.16, alpha: 1.0).cgColor,
+    NSColor(srgbRed: 1.00, green: 0.82, blue: 0.12, alpha: 1.0).cgColor,
+    NSColor(srgbRed: 0.91, green: 0.62, blue: 0.00, alpha: 1.0).cgColor,
 ] as CFArray
 let bodyGradient = CGGradient(colorsSpace: colorSpace, colors: bodyColors, locations: [0.0, 1.0])!
 ctx.drawLinearGradient(
@@ -66,12 +66,6 @@ ctx.fillPath()
 
 ctx.restoreGState()
 
-// A hairline edge, so the light tile doesn't vanish against light backgrounds.
-ctx.addPath(tilePath)
-ctx.setStrokeColor(NSColor(white: 0.0, alpha: 0.12).cgColor)
-ctx.setLineWidth(canvas * 0.004)
-ctx.strokePath()
-
 // MARK: - Text
 
 func draw(_ string: String, size: CGFloat, at point: CGPoint) {
@@ -92,7 +86,7 @@ func size(of string: String, size: CGFloat) -> NSSize {
 // Atomic number, top-left, tipped 45° to the left (counterclockwise) about
 // its own centre. Nudged up in the small variant so it still reads once the
 // name is gone.
-let number = "29"
+let number = "27"
 let numberSize = side * (includeName ? 0.115 : 0.135)
 let numberInset = side * 0.075
 let numberBox = size(of: number, size: numberSize)
