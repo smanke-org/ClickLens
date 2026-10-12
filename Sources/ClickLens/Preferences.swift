@@ -135,6 +135,32 @@ final class Preferences {
         SettingsSync.shared.localDidChange()
     }
 
+    /// Every setting's current value, in the form UserDefaults stores it, defaults included.
+    /// iCloud gets the whole set, so a Mac adopting it never mistakes a setting that is
+    /// merely at its default for one that is missing.
+    var snapshot: [String: Any] {
+        func data<T: Encodable>(_ value: T) -> Data { (try? JSONEncoder().encode(value)) ?? Data() }
+        return [
+            "spotlightRadius": spotlightRadius, "spotlightSoftness": spotlightSoftness, "dimColor": data(dimColor),
+            "spotlightAnimates": spotlightAnimates, "spotlightAnimationDuration": spotlightAnimationDuration,
+            "spotlightAutoOff": spotlightAutoOff, "spotlightAutoOffSeconds": spotlightAutoOffSeconds,
+            "spotlightHotKey": data(spotlightHotKey),
+            "clicksWithSpotlight": clicksWithSpotlight, "clickRadius": clickRadius, "clickExpands": clickExpands,
+            "clickFadeDuration": clickFadeDuration, "leftClickColor": data(leftClickColor),
+            "rightClickColor": data(rightClickColor), "otherClickColor": data(otherClickColor),
+            "clickSound": clickSound, "clickVolume": clickVolume, "clicksHotKey": data(clicksHotKey),
+            "keystrokesHotKey": data(keystrokesHotKey), "keystrokeFilter": keystrokeFilter.rawValue,
+            "keystrokeFontSize": keystrokeFontSize, "keystrokeBackground": data(keystrokeBackground),
+            "keystrokeFadeSeconds": keystrokeFadeSeconds, "keystrokeScreen": Int(keystrokeScreen),
+            "ignoreOwnHotKeys": ignoreOwnHotKeys, "announceToggles": announceToggles,
+            "boxHotKey": data(boxHotKey), "boxColor": data(boxColor), "boxThickness": boxThickness,
+            "boxFadeAfter": boxFadeAfter, "boxKeepDrawing": boxKeepDrawing,
+            "arrowHotKey": data(arrowHotKey), "arrowColor": data(arrowColor), "arrowThickness": arrowThickness,
+            "arrowFadeAfter": arrowFadeAfter, "arrowShape": arrowShape.rawValue, "arrowClickIsTip": arrowClickIsTip,
+            "arrowKeepDrawing": arrowKeepDrawing,
+        ]
+    }
+
     /// Re-reads every setting after another Mac's settings were written into UserDefaults.
     func reload() { load() }
 

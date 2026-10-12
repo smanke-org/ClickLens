@@ -17,7 +17,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         NSApp.mainMenu = AppPresence.mainMenu(appName: AppInfo.name, settingsTitle: "Settings…",
                                               target: self, settings: #selector(showSettings))
         effects.onChange = { [weak self] in self?.refreshIcon() }
+        // Set at the end of the first launch, so its absence means a brand-new install.
+        let newInstall = !UserDefaults.standard.bool(forKey: "askedForAccessibility")
         effects.start()
+        if newInstall { SettingsSync.shared.adoptOnNewInstall() }
         SettingsSync.shared.start()
 
         setUpStatusItem()

@@ -77,6 +77,15 @@ final class SettingsSync {
 
     // MARK: - Lifecycle
 
+    /// On a brand-new install, a settings file already in iCloud Drive means this user has
+    /// ClickLens on another Mac: turn sync on and start from those settings, rather than
+    /// from the defaults.
+    func adoptOnNewInstall() {
+        guard !isEnabled, FileManager.default.fileExists(atPath: Self.file.path) else { return }
+        NSLog("ClickLens: new install found settings in iCloud Drive; turning sync on")
+        isEnabled = true
+    }
+
     func start() {
         guard isEnabled, !started else { return }
         guard iCloudDriveAvailable else {
@@ -172,10 +181,11 @@ final class SettingsSync {
     private func write() {
         guard isEnabled, iCloudDriveAvailable else { return }
         let updatedAt = localModified ?? Self.now
-        var settings: [String: Any] = [:]
-        for key in Self.syncedKeys {
-            if let value = defaults.object(forKey: key) { settings[key] = value }
-        }
+        // The whole set, defaults included (see Preferences.snapshot).
+        var settings = Preferences.shared.snapshot.filter { Self.syncedKeys.contains($0.key) }
+        settings["showInDock"] = AppPresence.showInDock
+        settings["showInMenuBar"] = AppPresence.showInMenuBar
+        settings[UpdatePolicy.key] = UpdatePolicy.current.rawValue
         let plist: [String: Any] = ["version": 1, "updatedAt": updatedAt, "updatedBy": Self.deviceName, "settings": settings]
         do {
             let data = try PropertyListSerialization.data(fromPropertyList: plist, format: .xml, options: 0)
@@ -197,9 +207,11 @@ final class SettingsSync {
     private func apply(_ remote: Document) {
         applying = true
         defer { applying = false }
+        // Only what the file holds. Files written before 1.5.1 left out settings at their
+        // defaults; treating a missing setting as "reset it" wiped out this Mac's choices,
+        // so a missing setting now keeps this Mac's value.
         for key in Self.syncedKeys {
-            // A setting another Mac never changed is absent: fall back to the default.
-            if let value = remote.settings[key] { defaults.set(value, forKey: key) } else { defaults.removeObject(forKey: key) }
+            if let value = remote.settings[key] { defaults.set(value, forKey: key) }
         }
         Preferences.shared.reload()
         AutoUpdater.shared.policy = UpdatePolicy.current
