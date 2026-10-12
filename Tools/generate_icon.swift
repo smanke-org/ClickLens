@@ -114,7 +114,7 @@ draw(symbol, size: symbolSize, at: CGPoint(
 
 // Name along the bottom.
 if includeName {
-    let nameSize = side * 0.077
+    let nameSize = side * 0.088
     let name = "ClickLens"
     let nameWidth = size(of: name, size: nameSize).width
     draw(name, size: nameSize, at: CGPoint(
