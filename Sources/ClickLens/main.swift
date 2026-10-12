@@ -14,7 +14,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let effects = Effects.shared
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        SettingsWindow.shared.makeContent = { AnyView(SettingsView()) }
         NSApp.mainMenu = AppPresence.mainMenu(appName: AppInfo.name, settingsTitle: "Settings…",
                                               target: self, settings: #selector(showSettings))
         effects.onChange = { [weak self] in self?.refreshIcon() }

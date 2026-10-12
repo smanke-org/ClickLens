@@ -2,23 +2,21 @@ import AppKit
 import ClickLensKit
 import SwiftUI
 
-/// Settings in an AppKit window, so the Dock menu and the menu bar item can open it
-/// (SwiftUI's Settings scene can't be opened from AppKit).
+/// Settings in an AppKit window with the standard toolbar tabs (an icon above each
+/// label), so the Dock menu and the menu bar item can open it (SwiftUI's Settings
+/// scene can't be opened from AppKit).
 @MainActor
 final class SettingsWindow: NSObject, NSWindowDelegate {
     static let shared = SettingsWindow()
 
-    var makeContent: (() -> AnyView)?
     private var window: NSWindow?
 
     func show() {
-        if window == nil, let makeContent {
-            let hosting = NSHostingController(rootView: makeContent())
-            // Without this a grouped Form has no natural height and opens as a sliver.
-            hosting.sizingOptions = [.preferredContentSize]
-            let window = NSWindow(contentViewController: hosting)
-            window.title = "ClickLens Settings"
+        if window == nil {
+            let tabs = SettingsTabs()
+            let window = NSWindow(contentViewController: tabs)
             window.styleMask = [.titled, .closable]
+            window.toolbarStyle = .preference
             window.isReleasedWhenClosed = false
             window.delegate = self
             window.center()
@@ -34,23 +32,48 @@ final class SettingsWindow: NSObject, NSWindowDelegate {
     }
 }
 
-enum SettingsTab: Hashable { case spotlight, clicks, keystrokes, general }
+/// One toolbar item per pane; the window resizes to fit each pane and takes its name
+/// as the title, the way macOS's own Settings windows behave.
+@MainActor
+final class SettingsTabs: NSTabViewController {
+    init() {
+        super.init(nibName: nil, bundle: nil)
+        tabStyle = .toolbar
+        transitionOptions = [.crossfade, .allowUserInteraction]
+        add("Spotlight", "circle.dashed.inset.filled", SpotlightSettings())
+        add("Clicks", "cursorarrow.click.2", ClickSettings())
+        add("Keystrokes", "keyboard", KeystrokeSettings())
+        add("General", "gearshape", GeneralSettings())
+    }
 
-struct SettingsView: View {
-    @State private var tab = SettingsTab.spotlight
+    required init?(coder: NSCoder) { fatalError() }
 
-    var body: some View {
-        TabView(selection: $tab) {
-            SpotlightSettings().tabItem { Label("Spotlight", systemImage: "circle.dashed.inset.filled") }.tag(SettingsTab.spotlight)
-            ClickSettings().tabItem { Label("Clicks", systemImage: "cursorarrow.click.2") }.tag(SettingsTab.clicks)
-            KeystrokeSettings().tabItem { Label("Keystrokes", systemImage: "keyboard") }.tag(SettingsTab.keystrokes)
-            GeneralSettings().tabItem { Label("General", systemImage: "gearshape") }.tag(SettingsTab.general)
-        }
-        .frame(width: 520)
-        .onChange(of: tab, initial: true) { _, tab in
-            // On the Clicks tab every click shows a ring, so the settings can be judged live.
-            Effects.shared.previewingClicks = tab == .clicks
-        }
+    private func add(_ title: String, _ symbol: String, _ view: some View) {
+        let hosting = NSHostingController(rootView: view.frame(width: 520).fixedSize(horizontal: false, vertical: true))
+        // Without this a grouped Form has no natural height and opens as a sliver.
+        hosting.sizingOptions = [.preferredContentSize]
+        hosting.title = title
+        let item = NSTabViewItem(viewController: hosting)
+        item.label = title
+        item.image = NSImage(systemSymbolName: symbol, accessibilityDescription: title)
+        addTabViewItem(item)
+    }
+
+    override func viewDidAppear() {
+        super.viewDidAppear()
+        selectionChanged()
+    }
+
+    override func tabView(_ tabView: NSTabView, didSelect tabViewItem: NSTabViewItem?) {
+        super.tabView(tabView, didSelect: tabViewItem)
+        selectionChanged()
+    }
+
+    private func selectionChanged() {
+        let item = tabViewItems[selectedTabViewItemIndex]
+        view.window?.title = item.label
+        // On the Clicks tab every click shows a ring, so the settings can be judged live.
+        Effects.shared.previewingClicks = item.label == "Clicks"
     }
 }
 
@@ -67,11 +90,11 @@ struct ValueSlider: View {
     var body: some View {
         LabeledContent(title) {
             HStack {
-                if let step {
-                    Slider(value: $value, in: range, step: step, onEditingChanged: onEditing)
-                } else {
-                    Slider(value: $value, in: range, onEditingChanged: onEditing)
-                }
+                // Rounded here rather than with Slider's `step`, which draws a tick
+                // mark for every step.
+                Slider(value: Binding(get: { value }, set: { new in
+                    value = step.map { (new / $0).rounded() * $0 } ?? new
+                }), in: range, onEditingChanged: onEditing)
                 Text(format(value)).monospacedDigit().frame(width: 58, alignment: .trailing).foregroundStyle(.secondary)
             }
         }
