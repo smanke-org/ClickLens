@@ -12,6 +12,8 @@ final class Effects {
     /// Click rings switched on by themselves (rather than with the spotlight).
     private(set) var clicksOn = false
     private(set) var keystrokesOn = false
+    /// Box-drawing mode.
+    private(set) var boxOn = false
 
     /// Settings shows the spotlight while one of its sliders is being dragged.
     var previewingSpotlight = false { didSet { updateSpotlight() } }
@@ -28,13 +30,14 @@ final class Effects {
         clicksOn || previewingClicks || (prefs.clicksWithSpotlight && spotlightOn)
     }
 
-    var anyOn: Bool { spotlightOn || clicksOn || keystrokesOn }
+    var anyOn: Bool { spotlightOn || clicksOn || keystrokesOn || boxOn }
 
     func start() {
         OverlayController.shared.start()
         let input = InputMonitor.shared
         input.onMouseDown = { [weak self] button, count, location in
-            guard let self, self.ringsVisible else { return }
+            // Drawing a box is not a click to show.
+            guard let self, self.ringsVisible, !self.boxOn else { return }
             OverlayController.shared.mouseDown(button: button, clickCount: count, at: location)
             if self.prefs.clickSound { ClickSounds.shared.play(down: true) }
         }
@@ -44,7 +47,12 @@ final class Effects {
             if self.ringsVisible, self.prefs.clickSound { ClickSounds.shared.play(down: false) }
         }
         input.onKey = { [weak self] stroke, flags in
-            guard let self, self.keystrokesOn else { return }
+            guard let self else { return }
+            if self.boxOn, stroke.keyCode == 53, stroke.modifiers.isEmpty {   // Esc ends drawing
+                self.toggleBox()
+                return
+            }
+            guard self.keystrokesOn else { return }
             if self.prefs.ignoreOwnHotKeys, HotKeyCenter.shared.isOwnHotKey(keyCode: stroke.keyCode, flags: flags) { return }
             KeystrokeDisplay.shared.add(stroke)
         }
@@ -65,6 +73,7 @@ final class Effects {
             case .spotlight: self.toggleSpotlight()
             case .clicks: self.toggleClicks()
             case .keystrokes: self.toggleKeystrokes()
+            case .box: self.toggleBox()
             }
         }
         HotKeyCenter.shared.apply()
@@ -103,6 +112,13 @@ final class Effects {
         if !keystrokesOn { KeystrokeDisplay.shared.clear() }
         if keystrokesOn, !InputMonitor.shared.isTrusted { InputMonitor.shared.requestTrust() }
         ToggleAnnouncer.shared.announce(keystrokesOn ? "Keystrokes On" : "Keystrokes Off", symbol: "keyboard")
+        onChange?()
+    }
+
+    func toggleBox() {
+        boxOn.toggle()
+        OverlayController.shared.setDrawing(boxOn)
+        ToggleAnnouncer.shared.announce(boxOn ? "Drag to Draw a Box · Esc to Finish" : "Box Drawing Off", symbol: "rectangle.dashed")
         onChange?()
     }
 

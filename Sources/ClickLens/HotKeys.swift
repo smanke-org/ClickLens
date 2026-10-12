@@ -94,6 +94,7 @@ final class HotKeyCenter {
         case spotlight = 1
         case clicks = 2
         case keystrokes = 3
+        case box = 4
 
         @MainActor var hotKey: HotKey? {
             let prefs = Preferences.shared
@@ -101,6 +102,7 @@ final class HotKeyCenter {
             case .spotlight: return prefs.spotlightHotKey
             case .clicks: return prefs.clicksHotKey
             case .keystrokes: return prefs.keystrokesHotKey
+            case .box: return prefs.boxHotKey
             }
         }
     }

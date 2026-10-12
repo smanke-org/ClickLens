@@ -17,6 +17,7 @@ Requires macOS 26 or later.
 - **Spotlight** (⌃⌥⌘L): dims every screen except a circle around the pointer. You can set the radius, the soft edge, the dim colour and strength, the zoom animation, and an automatic turn-off.
 - **Click rings** (⌃⌥⌘C): a ring for each click, with separate colours for the left, right and other buttons, and double rings for double clicks. Rings can expand as they fade and play an optional click sound. They can show on their own or whenever the spotlight is on.
 - **Keystrokes** (⌃⌥⌘K): keys shown at the bottom of the screen. Choose **Everything you type**, or **Key combinations only**, which shows only keys pressed with ⌘ ⌥ ⇧ or ⌃ (such as ⇧⌘K) and keeps ordinary typing private. Font size, background and fade time are adjustable, and you can pick which display it appears on.
+- **Draw a box** (⌃⌥⌘B): click and drag to draw a coloured box around anything on screen, as many as you like; press Esc to finish. Choose the line colour, thickness, and how long each box stays before it fades.
 - Every shortcut can be changed. An on-screen note can confirm each switch.
 - Optional iCloud sync keeps settings the same on every Mac signed in to your iCloud account (through iCloud Drive; turn it on in Settings › General).
 - Shows in the menu bar, the Dock, both, or neither. Can open at login and updates itself from GitHub releases.

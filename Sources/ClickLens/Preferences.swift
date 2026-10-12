@@ -62,6 +62,13 @@ final class Preferences {
     var keystrokeScreen: UInt32 = 0 { didSet { save(Int(keystrokeScreen), "keystrokeScreen") } }
     var ignoreOwnHotKeys: Bool = true { didSet { save(ignoreOwnHotKeys, "ignoreOwnHotKeys") } }
 
+    // MARK: Boxes
+    var boxHotKey: HotKey? = Defaults.boxHotKey { didSet { saveCodable(boxHotKey, "boxHotKey") } }
+    var boxColor: RGBA = Defaults.boxColor { didSet { saveCodable(boxColor, "boxColor") } }
+    var boxThickness: Double = Defaults.boxThickness { didSet { save(boxThickness, "boxThickness") } }
+    /// Seconds a finished box stays before it fades.
+    var boxFadeAfter: Double = Defaults.boxFadeAfter { didSet { save(boxFadeAfter, "boxFadeAfter") } }
+
     // MARK: General
     /// Show a short on-screen note when an effect is switched on or off.
     var announceToggles: Bool = true { didSet { save(announceToggles, "announceToggles") } }
@@ -85,6 +92,10 @@ final class Preferences {
         static let spotlightHotKey: HotKey? = HotKey(keyCode: 37, modifiers: HotKey.controlOptionCommand, display: "⌃⌥⌘L")
         static let clicksHotKey: HotKey? = HotKey(keyCode: 8, modifiers: HotKey.controlOptionCommand, display: "⌃⌥⌘C")
         static let keystrokesHotKey: HotKey? = HotKey(keyCode: 40, modifiers: HotKey.controlOptionCommand, display: "⌃⌥⌘K")
+        static let boxHotKey: HotKey? = HotKey(keyCode: 11, modifiers: HotKey.controlOptionCommand, display: "⌃⌥⌘B")
+        static let boxColor = RGBA(1.0, 0.23, 0.19, 1.0)
+        static let boxThickness = 5.0
+        static let boxFadeAfter = 3.0
     }
 
     /// Every key this class writes, so a reset can clear them all.
@@ -94,6 +105,7 @@ final class Preferences {
         "clickExpands", "clickFadeDuration", "leftClickColor", "rightClickColor", "otherClickColor", "clickSound",
         "clickVolume", "clicksHotKey", "keystrokesHotKey", "keystrokeFilter", "keystrokeFontSize",
         "keystrokeBackground", "keystrokeFadeSeconds", "keystrokeScreen", "ignoreOwnHotKeys", "announceToggles",
+        "boxHotKey", "boxColor", "boxThickness", "boxFadeAfter",
     ]
 
     @ObservationIgnored private var loading = false
@@ -150,6 +162,10 @@ final class Preferences {
         keystrokeScreen = UInt32(d.integer(forKey: "keystrokeScreen"))
         ignoreOwnHotKeys = bool("ignoreOwnHotKeys", true)
         announceToggles = bool("announceToggles", true)
+        boxHotKey = codable("boxHotKey", Defaults.boxHotKey)
+        boxColor = codable("boxColor", Defaults.boxColor)
+        boxThickness = double("boxThickness", Defaults.boxThickness)
+        boxFadeAfter = double("boxFadeAfter", Defaults.boxFadeAfter)
     }
 
     private func save(_ value: Any, _ key: String) {

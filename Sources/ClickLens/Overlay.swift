@@ -25,7 +25,28 @@ final class OverlayPanel: NSPanel {
     override var canBecomeMain: Bool { false }
 }
 
-/// Draws the spotlight and click rings on every screen.
+/// The overlay's content view. It ignores the mouse except in box-drawing mode, when
+/// the panel stops passing clicks through and drags here draw a box.
+final class OverlayView: NSView {
+    var onDrag: ((_ phase: NSEvent.EventType) -> Void)?
+
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+
+    override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        for area in trackingAreas { removeTrackingArea(area) }
+        // activeAlways: ClickLens is never the active app while you draw over another one.
+        addTrackingArea(NSTrackingArea(rect: .zero, options: [.activeAlways, .cursorUpdate, .inVisibleRect],
+                                       owner: self, userInfo: nil))
+    }
+
+    override func cursorUpdate(with event: NSEvent) { NSCursor.crosshair.set() }
+    override func mouseDown(with event: NSEvent) { NSCursor.crosshair.set(); onDrag?(.leftMouseDown) }
+    override func mouseDragged(with event: NSEvent) { onDrag?(.leftMouseDragged) }
+    override func mouseUp(with event: NSEvent) { onDrag?(.leftMouseUp) }
+}
+
+/// Draws the spotlight, click rings and boxes on every screen.
 @MainActor
 final class OverlayController: NSObject {
     static let shared = OverlayController()
@@ -37,12 +58,14 @@ final class OverlayController: NSObject {
         let dim = CAShapeLayer()
         let edge = CAGradientLayer()
         let rings = CALayer()
+        let boxes = CALayer()
         var ringLayers: [UUID: CAShapeLayer] = [:]
+        var boxLayers: [UUID: CAShapeLayer] = [:]
 
         init(screen: NSScreen) {
             self.screen = screen
             panel = OverlayPanel(screen: screen)
-            let view = NSView(frame: NSRect(origin: .zero, size: screen.frame.size))
+            let view = OverlayView(frame: NSRect(origin: .zero, size: screen.frame.size))
             view.wantsLayer = true
             panel.contentView = view
             let root = view.layer!
@@ -53,10 +76,24 @@ final class OverlayController: NSObject {
             edge.endPoint = CGPoint(x: 1, y: 1)
             edge.masksToBounds = true
             rings.frame = root.bounds
-            for layer in [dim, edge, rings] as [CALayer] {
+            boxes.frame = root.bounds
+            for layer in [dim, edge, boxes, rings] as [CALayer] {
                 layer.actions = OverlayController.noAnimations
                 root.addSublayer(layer)
             }
+        }
+    }
+
+    private struct Box {
+        let id = UUID()
+        let start: CGPoint
+        var end: CGPoint
+        /// When the drag ended; the box fades once `fadeAfter` has passed.
+        var finished: CFTimeInterval?
+
+        var rect: CGRect {
+            CGRect(x: min(start.x, end.x), y: min(start.y, end.y),
+                   width: abs(end.x - start.x), height: abs(end.y - start.y))
         }
     }
 
@@ -83,6 +120,12 @@ final class OverlayController: NSObject {
     private var spotlightLevel = 0.0
     private var spotlightTarget = 0.0
     private var rings: [Ring] = []
+    private var boxes: [Box] = []
+    private var drawingBox: UUID?
+    /// Box-drawing mode: the overlays take the mouse instead of passing it through.
+    private(set) var drawing = false
+    /// How long a finished box fades out over.
+    private static let boxFadeDuration = 0.4
     /// Ring for each held button, so it follows the pointer until release.
     private var heldRings: [Int: UUID] = [:]
 
@@ -139,6 +182,75 @@ final class OverlayController: NSObject {
         wake()
     }
 
+    // MARK: - Boxes
+
+    func setDrawing(_ on: Bool) {
+        drawing = on
+        for overlay in overlays { overlay.panel.ignoresMouseEvents = !on }
+        if !on, let id = drawingBox { finishBox(id) }
+        if on {
+            NSCursor.crosshair.set()
+        } else {
+            NSCursor.arrow.set()
+        }
+        wake()
+    }
+
+    /// A box around the middle of the screen with the pointer, to judge the settings by.
+    func showSampleBox() {
+        let pointer = NSEvent.mouseLocation
+        let screen = NSScreen.screens.first { NSMouseInRect(pointer, $0.frame, false) } ?? NSScreen.screens[0]
+        let size = CGSize(width: screen.frame.width * 0.3, height: screen.frame.height * 0.2)
+        let origin = CGPoint(x: screen.frame.midX - size.width / 2, y: screen.frame.midY - size.height / 2)
+        var box = Box(start: origin, end: CGPoint(x: origin.x + size.width, y: origin.y + size.height))
+        box.finished = CACurrentMediaTime()
+        boxes.append(box)
+        wake()
+    }
+
+    func clearBoxes() {
+        boxes.removeAll()
+        drawingBox = nil
+        wake()
+    }
+
+    private func drag(_ phase: NSEvent.EventType) {
+        guard drawing else { return }
+        let pointer = NSEvent.mouseLocation
+        switch phase {
+        case .leftMouseDown:
+            let box = Box(start: pointer, end: pointer)
+            boxes.append(box)
+            drawingBox = box.id
+        case .leftMouseDragged:
+            if let id = drawingBox, let i = boxes.firstIndex(where: { $0.id == id }) { boxes[i].end = pointer }
+        default:
+            if let id = drawingBox {
+                if let i = boxes.firstIndex(where: { $0.id == id }) { boxes[i].end = pointer }
+                finishBox(id)
+            }
+        }
+        wake()
+    }
+
+    private func finishBox(_ id: UUID) {
+        drawingBox = nil
+        guard let i = boxes.firstIndex(where: { $0.id == id }) else { return }
+        // A click without a drag draws nothing.
+        if boxes[i].rect.width < 4 || boxes[i].rect.height < 4 {
+            boxes.remove(at: i)
+        } else {
+            boxes[i].finished = CACurrentMediaTime()
+        }
+    }
+
+    private func boxOpacity(_ box: Box, now: CFTimeInterval) -> Double {
+        guard let finished = box.finished else { return 1 }
+        let fadeStart = finished + prefs.boxFadeAfter
+        guard now > fadeStart else { return 1 }
+        return max(0, 1 - (now - fadeStart) / Self.boxFadeDuration)
+    }
+
     // MARK: - Drawing
 
     @objc private func screensChanged() {
@@ -150,6 +262,10 @@ final class OverlayController: NSObject {
         displayLink?.invalidate()
         displayLink = nil
         overlays = NSScreen.screens.map(ScreenOverlay.init)
+        for overlay in overlays {
+            overlay.panel.ignoresMouseEvents = !drawing
+            (overlay.panel.contentView as? OverlayView)?.onDrag = { [weak self] phase in self?.drag(phase) }
+        }
         if let view = overlays.first?.panel.contentView {
             let link = view.displayLink(target: self, selector: #selector(tick(_:)))
             link.add(to: .main, forMode: .common)
@@ -191,7 +307,9 @@ final class OverlayController: NSObject {
             return now - released >= prefs.clickFadeDuration
         }
 
-        let active = spotlightLevel > 0 || spotlightTarget > 0 || !rings.isEmpty
+        boxes.removeAll { boxOpacity($0, now: now) <= 0 }
+
+        let active = spotlightLevel > 0 || spotlightTarget > 0 || !rings.isEmpty || !boxes.isEmpty || drawing
         setVisible(active)
         guard active else {
             displayLink?.isPaused = true
@@ -203,6 +321,7 @@ final class OverlayController: NSObject {
         for overlay in overlays {
             drawSpotlight(on: overlay, pointer: pointer)
             drawRings(on: overlay, now: now)
+            drawBoxes(on: overlay, now: now)
         }
         CATransaction.commit()
     }
@@ -246,6 +365,41 @@ final class OverlayController: NSObject {
         overlay.edge.cornerRadius = r
         overlay.edge.colors = [color.with(alpha: 0).cgColor, color.with(alpha: 0).cgColor, color.cgColor]
         overlay.edge.locations = [0, NSNumber(value: 1 - softness), 1]
+    }
+
+    private func drawBoxes(on overlay: ScreenOverlay, now: CFTimeInterval) {
+        let frame = overlay.screen.frame
+        let thickness = prefs.boxThickness
+        var live = Set<UUID>()
+        for box in boxes {
+            let rect = box.rect
+            guard rect.insetBy(dx: -thickness, dy: -thickness).intersects(frame) else { continue }
+            live.insert(box.id)
+            let layer = overlay.boxLayers[box.id] ?? {
+                let layer = CAShapeLayer()
+                layer.actions = Self.noAnimations
+                layer.fillColor = nil
+                layer.lineJoin = .round
+                overlay.boxes.addSublayer(layer)
+                overlay.boxLayers[box.id] = layer
+                return layer
+            }()
+            let local = rect.offsetBy(dx: -frame.minX, dy: -frame.minY)
+            let corner = min(thickness * 1.5, local.width / 2, local.height / 2)
+            layer.path = CGPath(roundedRect: local, cornerWidth: corner, cornerHeight: corner, transform: nil)
+            layer.lineWidth = thickness
+            layer.strokeColor = prefs.boxColor.cgColor
+            // A soft shadow keeps the line readable on both light and dark content.
+            layer.shadowColor = NSColor.black.cgColor
+            layer.shadowOpacity = 0.35
+            layer.shadowRadius = 3
+            layer.shadowOffset = .zero
+            layer.opacity = Float(boxOpacity(box, now: now))
+        }
+        for (id, layer) in overlay.boxLayers where !live.contains(id) {
+            layer.removeFromSuperlayer()
+            overlay.boxLayers[id] = nil
+        }
     }
 
     private func drawRings(on overlay: ScreenOverlay, now: CFTimeInterval) {

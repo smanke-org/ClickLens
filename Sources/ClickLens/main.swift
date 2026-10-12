@@ -105,6 +105,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             ("Spotlight", #selector(toggleSpotlight), effects.spotlightOn, prefs.spotlightHotKey),
             ("Click Rings", #selector(toggleClicks), effects.clicksOn, prefs.clicksHotKey),
             ("Keystrokes", #selector(toggleKeystrokes), effects.keystrokesOn, prefs.keystrokesHotKey),
+            ("Draw Box", #selector(toggleBox), effects.boxOn, prefs.boxHotKey),
         ]
         return entries.map { title, action, on, hotKey in
             let menuItem = item(title, action)
@@ -128,6 +129,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc func toggleSpotlight() { effects.toggleSpotlight() }
     @objc func toggleClicks() { effects.toggleClicks() }
     @objc func toggleKeystrokes() { effects.toggleKeystrokes() }
+    @objc func toggleBox() { effects.toggleBox() }
     @objc func showSettings() { SettingsWindow.shared.show() }
     @objc func checkForUpdates() { UpdateController.checkForUpdates() }
     @objc func quit() { NSApp.terminate(nil) }

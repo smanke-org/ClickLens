@@ -43,6 +43,7 @@ final class SettingsTabs: NSTabViewController {
         add("Spotlight", "circle.dashed.inset.filled", SpotlightSettings())
         add("Clicks", "cursorarrow.click.2", ClickSettings())
         add("Keystrokes", "keyboard", KeystrokeSettings())
+        add("Box", "rectangle.dashed", BoxSettings())
         add("General", "gearshape", GeneralSettings())
     }
 
@@ -320,6 +321,38 @@ struct ScreenPicker: View {
 
     static func currentScreens() -> [ScreenInfo] {
         NSScreen.screens.map { ScreenInfo(id: $0.displayID, name: $0.localizedName, frame: $0.frame) }
+    }
+}
+
+// MARK: - Box
+
+struct BoxSettings: View {
+    @State private var prefs = Preferences.shared
+    @State private var effects = Effects.shared
+
+    var body: some View {
+        Form {
+            Section {
+                LabeledContent("Shortcut") {
+                    HStack {
+                        ShortcutRecorder(hotKey: $prefs.boxHotKey)
+                        Button(effects.boxOn ? "Stop Drawing" : "Start Drawing") { effects.toggleBox() }
+                    }
+                }
+            } footer: {
+                Text("Press the shortcut, then click and drag to draw a box around anything on screen. Draw as many as you like; press Esc or the shortcut again to go back to using your Mac normally.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            Section("Look") {
+                ColorPicker("Line colour", selection: $prefs.boxColor.color, supportsOpacity: true)
+                ValueSlider(title: "Thickness", value: $prefs.boxThickness, range: 1...20, step: 1, format: points)
+                ValueSlider(title: "Fade after", value: $prefs.boxFadeAfter, range: 0.5...30, step: 0.5, format: seconds)
+                LabeledContent("Preview") {
+                    Button("Show Sample") { OverlayController.shared.showSampleBox() }
+                }
+            }
+        }
+        .formStyle(.grouped)
     }
 }
 
