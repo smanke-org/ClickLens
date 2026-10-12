@@ -18,6 +18,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                                               target: self, settings: #selector(showSettings))
         effects.onChange = { [weak self] in self?.refreshIcon() }
         effects.start()
+        SettingsSync.shared.start()
 
         setUpStatusItem()
         NotificationCenter.default.addObserver(forName: AppPresence.menuBarDidChange, object: nil, queue: .main) { _ in

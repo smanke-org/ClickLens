@@ -88,7 +88,7 @@ final class Preferences {
     }
 
     /// Every key this class writes, so a reset can clear them all.
-    private static let keys = [
+    static let keys = [
         "spotlightRadius", "spotlightSoftness", "dimColor", "spotlightAnimates", "spotlightAnimationDuration",
         "spotlightAutoOff", "spotlightAutoOffSeconds", "spotlightHotKey", "clicksWithSpotlight", "clickRadius",
         "clickExpands", "clickFadeDuration", "leftClickColor", "rightClickColor", "otherClickColor", "clickSound",
@@ -105,7 +105,11 @@ final class Preferences {
     func resetToDefaults() {
         for key in Self.keys { UserDefaults.standard.removeObject(forKey: key) }
         load()
+        SettingsSync.shared.localDidChange()
     }
+
+    /// Re-reads every setting after another Mac's settings were written into UserDefaults.
+    func reload() { load() }
 
     private func load() {
         loading = true
@@ -150,12 +154,22 @@ final class Preferences {
 
     private func save(_ value: Any, _ key: String) {
         guard !loading else { return }
-        UserDefaults.standard.set(value, forKey: key)
+        store(value as? NSObject, key)
     }
 
     private func saveCodable<T: Encodable>(_ value: T, _ key: String) {
         guard !loading else { return }
-        UserDefaults.standard.set(try? JSONEncoder().encode(value), forKey: key)
+        store((try? JSONEncoder().encode(value)) as NSObject?, key)
+    }
+
+    /// Writes only real changes, and reports them for iCloud sync. SwiftUI controls write
+    /// their current value back when settings arrive from another Mac; counting those as
+    /// edits would send the same settings back and forth between Macs forever.
+    private func store(_ value: NSObject?, _ key: String) {
+        let defaults = UserDefaults.standard
+        if let old = defaults.object(forKey: key) as? NSObject, let value, old.isEqual(value) { return }
+        defaults.set(value, forKey: key)
+        SettingsSync.shared.localDidChange()
     }
 }
 

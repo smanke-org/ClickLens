@@ -49,7 +49,13 @@ final class SettingsTabs: NSTabViewController {
     required init?(coder: NSCoder) { fatalError() }
 
     private func add(_ title: String, _ symbol: String, _ view: some View) {
-        let hosting = NSHostingController(rootView: view.frame(width: 520).fixedSize(horizontal: false, vertical: true))
+        let pane = VStack(spacing: 0) {
+            view
+            Text("\(AppInfo.name) \(AppInfo.displayVersion)")
+                .font(.caption).foregroundStyle(.secondary)
+                .padding(.bottom, 12)
+        }
+        let hosting = NSHostingController(rootView: pane.frame(width: 520).fixedSize(horizontal: false, vertical: true))
         // Without this a grouped Form has no natural height and opens as a sliver.
         hosting.sizingOptions = [.preferredContentSize]
         hosting.title = title
@@ -324,6 +330,7 @@ struct GeneralSettings: View {
     @State private var presence = PresenceSettings.shared
     @State private var login = LaunchAtLogin.shared
     @State private var confirmReset = false
+    @State private var sync = SettingsSync.shared
     @AppStorage("checkForUpdatesAutomatically") private var checkAutomatically = true
 
     var body: some View {
@@ -346,6 +353,27 @@ struct GeneralSettings: View {
                 }
                 Toggle("Announce when an effect turns on or off", isOn: $prefs.announceToggles)
             }
+            Section {
+                Toggle("Sync settings with your other Macs", isOn: $sync.isEnabled)
+                if sync.isEnabled {
+                    LabeledContent {
+                        Button("Sync Now") { sync.syncNow() }
+                    } label: {
+                        if let error = sync.lastError {
+                            Text(error).foregroundStyle(.red)
+                        } else if let date = sync.lastSynced {
+                            Text("Synced \(date.formatted(date: .omitted, time: .shortened))\(sync.lastSource.map { $0 == SettingsSync.deviceName ? "" : " from \($0)" } ?? "")")
+                        } else {
+                            Text("Waiting for iCloud Drive…")
+                        }
+                    }
+                }
+            } header: {
+                Text("iCloud")
+            } footer: {
+                Text("Shortcuts, colours, sizes and other settings follow you to every Mac signed in to the same iCloud account with sync turned on. Open at login and the keystroke screen stay separate on each Mac.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
             Section("Updates") {
                 Toggle("Check for updates when ClickLens opens", isOn: $checkAutomatically)
                 LabeledContent("Version \(AppInfo.displayVersion)") {
@@ -360,6 +388,7 @@ struct GeneralSettings: View {
         }
         .formStyle(.grouped)
         .onAppear { login.refresh() }
+        .onChange(of: checkAutomatically) { SettingsSync.shared.localDidChange() }
         .confirmationDialog("Reset the spotlight, click and keystroke settings?", isPresented: $confirmReset) {
             Button("Reset", role: .destructive) {
                 prefs.resetToDefaults()
@@ -386,5 +415,13 @@ final class PresenceSettings {
 
     var showInMenuBar = AppPresence.showInMenuBar {
         didSet { AppPresence.showInMenuBar = showInMenuBar }
+    }
+
+    /// Follows choices that arrived from another Mac.
+    func reload() {
+        if showInDock != AppPresence.showInDock { showInDock = AppPresence.showInDock }
+        if showInMenuBar != AppPresence.showInMenuBar { showInMenuBar = AppPresence.showInMenuBar }
+        // The status item follows the notification, which the setter only posts on a change.
+        NotificationCenter.default.post(name: AppPresence.menuBarDidChange, object: nil)
     }
 }
