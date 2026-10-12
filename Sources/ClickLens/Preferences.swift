@@ -71,6 +71,16 @@ final class Preferences {
     /// Stay in drawing mode for more boxes until Esc, instead of ending after one.
     var boxKeepDrawing: Bool = false { didSet { save(boxKeepDrawing, "boxKeepDrawing") } }
 
+    // MARK: Arrows
+    var arrowHotKey: HotKey? = Defaults.arrowHotKey { didSet { saveCodable(arrowHotKey, "arrowHotKey") } }
+    var arrowColor: RGBA = Defaults.boxColor { didSet { saveCodable(arrowColor, "arrowColor") } }
+    var arrowThickness: Double = Defaults.arrowThickness { didSet { save(arrowThickness, "arrowThickness") } }
+    var arrowFadeAfter: Double = Defaults.boxFadeAfter { didSet { save(arrowFadeAfter, "arrowFadeAfter") } }
+    var arrowShape: ArrowShape = .classic { didSet { save(arrowShape.rawValue, "arrowShape") } }
+    /// The click marks where the arrow points (its tip); otherwise where it starts.
+    var arrowClickIsTip: Bool = false { didSet { save(arrowClickIsTip, "arrowClickIsTip") } }
+    var arrowKeepDrawing: Bool = false { didSet { save(arrowKeepDrawing, "arrowKeepDrawing") } }
+
     // MARK: General
     /// Show a short on-screen note when an effect is switched on or off.
     var announceToggles: Bool = true { didSet { save(announceToggles, "announceToggles") } }
@@ -98,6 +108,8 @@ final class Preferences {
         static let boxColor = RGBA(1.0, 0.23, 0.19, 1.0)
         static let boxThickness = 5.0
         static let boxFadeAfter = 3.0
+        static let arrowHotKey: HotKey? = HotKey(keyCode: 0, modifiers: HotKey.controlOptionCommand, display: "⌃⌥⌘A")
+        static let arrowThickness = 6.0
     }
 
     /// Every key this class writes, so a reset can clear them all.
@@ -108,6 +120,7 @@ final class Preferences {
         "clickVolume", "clicksHotKey", "keystrokesHotKey", "keystrokeFilter", "keystrokeFontSize",
         "keystrokeBackground", "keystrokeFadeSeconds", "keystrokeScreen", "ignoreOwnHotKeys", "announceToggles",
         "boxHotKey", "boxColor", "boxThickness", "boxFadeAfter", "boxKeepDrawing",
+        "arrowHotKey", "arrowColor", "arrowThickness", "arrowFadeAfter", "arrowShape", "arrowClickIsTip", "arrowKeepDrawing",
     ]
 
     @ObservationIgnored private var loading = false
@@ -169,6 +182,13 @@ final class Preferences {
         boxThickness = double("boxThickness", Defaults.boxThickness)
         boxFadeAfter = double("boxFadeAfter", Defaults.boxFadeAfter)
         boxKeepDrawing = bool("boxKeepDrawing", false)
+        arrowHotKey = codable("arrowHotKey", Defaults.arrowHotKey)
+        arrowColor = codable("arrowColor", Defaults.boxColor)
+        arrowThickness = double("arrowThickness", Defaults.arrowThickness)
+        arrowFadeAfter = double("arrowFadeAfter", Defaults.boxFadeAfter)
+        arrowShape = ArrowShape(rawValue: d.string(forKey: "arrowShape") ?? "") ?? .classic
+        arrowClickIsTip = bool("arrowClickIsTip", false)
+        arrowKeepDrawing = bool("arrowKeepDrawing", false)
     }
 
     private func save(_ value: Any, _ key: String) {

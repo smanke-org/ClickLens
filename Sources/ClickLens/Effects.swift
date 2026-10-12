@@ -12,8 +12,10 @@ final class Effects {
     /// Click rings switched on by themselves (rather than with the spotlight).
     private(set) var clicksOn = false
     private(set) var keystrokesOn = false
-    /// Box-drawing mode.
-    private(set) var boxOn = false
+    /// The drawing tool in use, if any.
+    private(set) var drawingTool: DrawTool?
+    var boxOn: Bool { drawingTool == .box }
+    var arrowOn: Bool { drawingTool == .arrow }
 
     /// Settings shows the spotlight while one of its sliders is being dragged.
     var previewingSpotlight = false { didSet { updateSpotlight() } }
@@ -30,20 +32,20 @@ final class Effects {
         clicksOn || previewingClicks || (prefs.clicksWithSpotlight && spotlightOn)
     }
 
-    var anyOn: Bool { spotlightOn || clicksOn || keystrokesOn || boxOn }
+    var anyOn: Bool { spotlightOn || clicksOn || keystrokesOn || drawingTool != nil }
 
     func start() {
         OverlayController.shared.start()
-        OverlayController.shared.onBoxFinished = { [weak self] in
-            // One box per shortcut press unless the user asked to keep drawing, so the
+        OverlayController.shared.onMarkFinished = { [weak self] in
+            // One mark per shortcut press unless the user asked to keep drawing, so the
             // mouse goes straight back to their apps.
-            guard let self, self.boxOn, !self.prefs.boxKeepDrawing else { return }
-            self.toggleBox(announce: false)
+            guard let self, let tool = self.drawingTool, !self.keepDrawing(tool) else { return }
+            self.setDrawing(nil, announce: false)
         }
         let input = InputMonitor.shared
         input.onMouseDown = { [weak self] button, count, location in
-            // Drawing a box is not a click to show.
-            guard let self, self.ringsVisible, !self.boxOn else { return }
+            // Drawing is not a click to show.
+            guard let self, self.ringsVisible, self.drawingTool == nil else { return }
             OverlayController.shared.mouseDown(button: button, clickCount: count, at: location)
             if self.prefs.clickSound { ClickSounds.shared.play(down: true) }
         }
@@ -54,8 +56,8 @@ final class Effects {
         }
         input.onKey = { [weak self] stroke, flags in
             guard let self else { return }
-            if self.boxOn, stroke.keyCode == 53, stroke.modifiers.isEmpty {   // Esc ends drawing
-                self.toggleBox()
+            if self.drawingTool != nil, stroke.keyCode == 53, stroke.modifiers.isEmpty {   // Esc ends drawing
+                self.setDrawing(nil)
                 return
             }
             guard self.keystrokesOn else { return }
@@ -80,6 +82,7 @@ final class Effects {
             case .clicks: self.toggleClicks()
             case .keystrokes: self.toggleKeystrokes()
             case .box: self.toggleBox()
+            case .arrow: self.toggleArrow()
             }
         }
         HotKeyCenter.shared.apply()
@@ -121,19 +124,37 @@ final class Effects {
         onChange?()
     }
 
-    func toggleBox(announce: Bool = true) {
-        boxOn.toggle()
-        if boxOn {
+    func toggleBox() { setDrawing(boxOn ? nil : .box) }
+    func toggleArrow() { setDrawing(arrowOn ? nil : .arrow) }
+
+    private func keepDrawing(_ tool: DrawTool) -> Bool {
+        tool == .box ? prefs.boxKeepDrawing : prefs.arrowKeepDrawing
+    }
+
+    /// Starts drawing with `tool`, switches tools, or (with nil) ends drawing.
+    func setDrawing(_ tool: DrawTool?, announce: Bool = true) {
+        let previous = drawingTool
+        guard tool != previous else { return }
+        if previous == nil {
             appBeforeDrawing = NSWorkspace.shared.frontmostApplication
         }
-        OverlayController.shared.setDrawing(boxOn)
-        if !boxOn, let app = appBeforeDrawing, app != NSRunningApplication.current {
+        drawingTool = tool
+        OverlayController.shared.setDrawing(tool)
+        if tool == nil, let app = appBeforeDrawing, app != NSRunningApplication.current {
             // Hand the keyboard back to the app that was in front before drawing began.
             app.activate()
         }
         if announce {
-            let hint = prefs.boxKeepDrawing ? "Drag to Draw Boxes · Esc to Finish" : "Drag to Draw a Box"
-            ToggleAnnouncer.shared.announce(boxOn ? hint : "Box Drawing Off", symbol: "rectangle.dashed")
+            switch tool {
+            case .box:
+                ToggleAnnouncer.shared.announce(prefs.boxKeepDrawing ? "Drag to Draw Boxes · Esc to Finish" : "Drag to Draw a Box",
+                                                symbol: "rectangle.dashed")
+            case .arrow:
+                let start = prefs.arrowClickIsTip ? "Click What to Point At, Then Drag" : "Drag to Draw an Arrow"
+                ToggleAnnouncer.shared.announce(prefs.arrowKeepDrawing ? start + " · Esc to Finish" : start, symbol: "arrow.up.right")
+            case nil:
+                ToggleAnnouncer.shared.announce("Drawing Off", symbol: previous == .arrow ? "arrow.up.right" : "rectangle.dashed")
+            }
         }
         onChange?()
     }

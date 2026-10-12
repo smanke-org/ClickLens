@@ -81,3 +81,23 @@ private func key(_ code: UInt16, _ chars: String, _ mods: KeyModifiers = []) -> 
     #expect(String(decoding: data.prefix(4), as: UTF8.self) == "RIFF")
     #expect(data.count == 44 + Int(44_100 * 0.045) * 2)
 }
+
+@Test func everyArrowShapeEndsAtItsTip() {
+    let tail = CGPoint(x: 0, y: 0), tip = CGPoint(x: 300, y: 120)
+    for shape in ArrowShape.allCases {
+        let arrow = ArrowGeometry.path(from: tail, to: tip, shape: shape, thickness: 6)
+        let box = arrow.path.boundingBoxOfPath
+        // The tip is the furthest point toward the arrow's direction, inside the outline.
+        #expect(box.insetBy(dx: -1, dy: -1).contains(tip), "\(shape)")
+        #expect(abs(box.maxX - tip.x) < 1, "\(shape) overshoots its tip")
+    }
+}
+
+@Test func shortArrowsStillDraw() {
+    for shape in ArrowShape.allCases {
+        let arrow = ArrowGeometry.path(from: .zero, to: CGPoint(x: 12, y: 0), shape: shape, thickness: 10)
+        #expect(!arrow.path.isEmpty)
+        // The head shrinks with the arrow rather than dwarfing it.
+        #expect(arrow.path.boundingBoxOfPath.width < 40, "\(shape)")
+    }
+}

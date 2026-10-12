@@ -44,6 +44,7 @@ final class SettingsTabs: NSTabViewController {
         add("Clicks", "cursorarrow.click.2", ClickSettings())
         add("Keystrokes", "keyboard", KeystrokeSettings())
         add("Box", "rectangle.dashed", BoxSettings())
+        add("Arrow", "arrow.up.right", ArrowSettings())
         add("General", "gearshape", GeneralSettings())
     }
 
@@ -351,11 +352,97 @@ struct BoxSettings: View {
                 ValueSlider(title: "Thickness", value: $prefs.boxThickness, range: 1...20, step: 1, format: points)
                 ValueSlider(title: "Fade after", value: $prefs.boxFadeAfter, range: 0.5...30, step: 0.5, format: seconds)
                 LabeledContent("Preview") {
-                    Button("Show Sample") { OverlayController.shared.showSampleBox() }
+                    Button("Show Sample") { OverlayController.shared.showSample(.box) }
                 }
             }
         }
         .formStyle(.grouped)
+    }
+}
+
+// MARK: - Arrow
+
+struct ArrowSettings: View {
+    @State private var prefs = Preferences.shared
+    @State private var effects = Effects.shared
+
+    var body: some View {
+        Form {
+            Section {
+                LabeledContent("Shortcut") {
+                    HStack {
+                        ShortcutRecorder(hotKey: $prefs.arrowHotKey)
+                        Button(effects.arrowOn ? "Stop Drawing" : "Start Drawing") { effects.toggleArrow() }
+                    }
+                }
+                Picker("Your click marks", selection: $prefs.arrowClickIsTip) {
+                    Text("Where the arrow starts").tag(false)
+                    Text("What the arrow points at").tag(true)
+                }
+                .pickerStyle(.radioGroup)
+                Toggle("Keep drawing until Esc", isOn: $prefs.arrowKeepDrawing)
+            } footer: {
+                Text(prefs.arrowClickIsTip
+                     ? "Press the shortcut, click the thing you want to point at, and drag away from it. The arrowhead stays where you clicked."
+                     : "Press the shortcut, click where the arrow should start, and drag to what it should point at.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            Section("Shape") {
+                HStack(spacing: 10) {
+                    ForEach(ArrowShape.allCases, id: \.self) { shape in
+                        ArrowShapeTile(shape: shape, color: prefs.arrowColor, selected: prefs.arrowShape == shape)
+                            .onTapGesture { prefs.arrowShape = shape }
+                    }
+                }
+                .frame(maxWidth: .infinity)
+            }
+            Section("Look") {
+                ColorPicker("Color", selection: $prefs.arrowColor.color, supportsOpacity: true)
+                ValueSlider(title: "Thickness", value: $prefs.arrowThickness, range: 1...20, step: 1, format: points)
+                ValueSlider(title: "Fade after", value: $prefs.arrowFadeAfter, range: 0.5...30, step: 0.5, format: seconds)
+                LabeledContent("Preview") {
+                    Button("Show Sample") { OverlayController.shared.showSample(.arrow) }
+                }
+            }
+        }
+        .formStyle(.grouped)
+    }
+}
+
+/// A small drawing of one arrow shape, for choosing it.
+struct ArrowShapeTile: View {
+    let shape: ArrowShape
+    let color: RGBA
+    let selected: Bool
+
+    var body: some View {
+        VStack(spacing: 6) {
+            Canvas { context, size in
+                // Drawn at a real on-screen size and scaled down, so the head keeps the
+                // proportions it has on screen instead of swamping a tiny line.
+                let scale: CGFloat = 0.32
+                context.scaleBy(x: scale, y: scale)
+                let w = size.width / scale, h = size.height / scale
+                let tail = CGPoint(x: 24, y: h - 24)
+                let tip = CGPoint(x: w - 24, y: 30)
+                let arrow = ArrowGeometry.path(from: tail, to: tip, shape: shape, thickness: 6)
+                let c = Color(nsColor: color.with(alpha: 1).nsColor)
+                let style = StrokeStyle(lineWidth: arrow.lineWidth, lineCap: .round, lineJoin: .round)
+                context.stroke(Path(arrow.line), with: .color(c), style: style)
+                context.fill(Path(arrow.head), with: .color(c))
+                context.stroke(Path(arrow.head), with: .color(c), style: style)
+            }
+            .frame(width: 64, height: 44)
+            Text(shape.title).font(.caption)
+        }
+        .padding(8)
+        .background(selected ? Color.accentColor.opacity(0.15) : Color.clear, in: RoundedRectangle(cornerRadius: 8))
+        .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(selected ? Color.accentColor : Color.secondary.opacity(0.25),
+                                                                lineWidth: selected ? 2 : 1))
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(shape.title)
+        .accessibilityAddTraits(selected ? [.isButton, .isSelected] : .isButton)
     }
 }
 
