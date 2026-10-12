@@ -454,7 +454,18 @@ struct GeneralSettings: View {
     @State private var login = LaunchAtLogin.shared
     @State private var confirmReset = false
     @State private var sync = SettingsSync.shared
-    @AppStorage("checkForUpdatesAutomatically") private var checkAutomatically = true
+    @State private var updater = AutoUpdater.shared
+
+    private var updateFooter: String {
+        switch updater.policy {
+        case .automatic:
+            "ClickLens checks every 30 minutes. A new version installs itself when no ClickLens effect has been on for 30 minutes, no app is presenting or keeping the screen awake, and your Mac hasn't been used for 2 minutes. You'll get a notification when it's done."
+        case .ask:
+            "ClickLens checks every 30 minutes and sends a notification when a new version is out. Nothing installs until you choose to."
+        case .off:
+            "ClickLens won't look for updates on its own. Use Check Now whenever you like."
+        }
+    }
 
     var body: some View {
         Form {
@@ -497,11 +508,33 @@ struct GeneralSettings: View {
                 Text("Shortcuts, colors, sizes and other settings follow you to every Mac signed in to the same iCloud account with sync turned on. Open at login and the keystroke screen stay separate on each Mac.")
                     .font(.caption).foregroundStyle(.secondary)
             }
-            Section("Updates") {
-                Toggle("Check for updates when ClickLens opens", isOn: $checkAutomatically)
+            Section {
+                Picker("When an update is available", selection: $updater.policy) {
+                    ForEach(UpdatePolicy.allCases, id: \.self) { Text($0.title).tag($0) }
+                }
+                if let staged = updater.staged {
+                    LabeledContent("Version \(staged.version) is ready") {
+                        Button("Install Now") { updater.installNow() }
+                    }
+                }
                 LabeledContent("Version \(AppInfo.displayVersion)") {
                     Button("Check Now") { UpdateController.checkForUpdates() }
                 }
+                if let error = updater.lastError {
+                    Text(error).font(.callout).foregroundStyle(.red)
+                }
+                if updater.policy != .off && !updater.notificationsAllowed {
+                    LabeledContent {
+                        Button("Open Notification Settings") { AutoUpdater.openNotificationSettings() }
+                    } label: {
+                        Label("Notifications are off for ClickLens, so update news only shows in the menu.",
+                              systemImage: "bell.slash").foregroundStyle(.orange)
+                    }
+                }
+            } header: {
+                Text("Updates")
+            } footer: {
+                Text(updateFooter).font(.caption).foregroundStyle(.secondary)
             }
             Section {
                 LabeledContent("Effects settings") {
@@ -510,8 +543,10 @@ struct GeneralSettings: View {
             }
         }
         .formStyle(.grouped)
-        .onAppear { login.refresh() }
-        .onChange(of: checkAutomatically) { SettingsSync.shared.localDidChange() }
+        .onAppear { login.refresh(); updater.refreshNotificationStatus() }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            updater.refreshNotificationStatus()
+        }
         .confirmationDialog("Reset the spotlight, click and keystroke settings?", isPresented: $confirmReset) {
             Button("Reset", role: .destructive) {
                 prefs.resetToDefaults()

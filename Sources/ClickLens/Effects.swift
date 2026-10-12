@@ -32,6 +32,9 @@ final class Effects {
         clicksOn || previewingClicks || (prefs.clicksWithSpotlight && spotlightOn)
     }
 
+    /// When an effect was last on, so an automatic update can wait a while after a talk.
+    @ObservationIgnored private(set) var lastActive = Date.distantPast
+
     var anyOn: Bool { spotlightOn || clicksOn || keystrokesOn || drawingTool != nil }
 
     func start() {
@@ -106,14 +109,14 @@ final class Effects {
         }
         if !ringsVisible { OverlayController.shared.releaseAllRings() }
         ToggleAnnouncer.shared.announce(on ? "Spotlight On" : "Spotlight Off", symbol: on ? "circle.dashed.inset.filled" : "circle.dashed")
-        onChange?()
+        noteActivity(); onChange?()
     }
 
     func toggleClicks() {
         clicksOn.toggle()
         if !ringsVisible { OverlayController.shared.releaseAllRings() }
         ToggleAnnouncer.shared.announce(clicksOn ? "Click Rings On" : "Click Rings Off", symbol: "cursorarrow.click.2")
-        onChange?()
+        noteActivity(); onChange?()
     }
 
     func toggleKeystrokes() {
@@ -121,7 +124,7 @@ final class Effects {
         if !keystrokesOn { KeystrokeDisplay.shared.clear() }
         if keystrokesOn, !InputMonitor.shared.isTrusted { InputMonitor.shared.requestTrust() }
         ToggleAnnouncer.shared.announce(keystrokesOn ? "Keystrokes On" : "Keystrokes Off", symbol: "keyboard")
-        onChange?()
+        noteActivity(); onChange?()
     }
 
     func toggleBox() { setDrawing(boxOn ? nil : .box) }
@@ -156,10 +159,13 @@ final class Effects {
                 ToggleAnnouncer.shared.announce("Drawing Off", symbol: previous == .arrow ? "arrow.up.right" : "rectangle.dashed")
             }
         }
-        onChange?()
+        noteActivity(); onChange?()
     }
 
     @ObservationIgnored private var appBeforeDrawing: NSRunningApplication?
+
+    /// Any switch, on or off, means effects were just in use.
+    private func noteActivity() { lastActive = Date() }
 
     private func updateSpotlight() {
         OverlayController.shared.setSpotlight(spotlightOn || previewingSpotlight)

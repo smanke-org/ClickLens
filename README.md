@@ -21,7 +21,7 @@ Requires macOS 26 or later.
 - **Draw an arrow** (⌃⌥⌘A): click and drag to draw an arrow. Your click can mark where the arrow starts or what it points at. Choose from five shapes (classic, open, curved, double and block), the color, thickness, and how long it stays before it fades.
 - Every shortcut can be changed. An on-screen note can confirm each switch.
 - Optional iCloud sync keeps settings the same on every Mac signed in to your iCloud account (through iCloud Drive; turn it on in Settings › General).
-- Shows in the menu bar, the Dock, both, or neither. Can open at login and updates itself from GitHub releases.
+- Shows in the menu bar, the Dock, both, or neither. Can open at login. Checks GitHub for updates every 30 minutes and either asks first (the default) or installs them automatically when your Mac is idle and nothing is being presented.
 
 ## Building
 

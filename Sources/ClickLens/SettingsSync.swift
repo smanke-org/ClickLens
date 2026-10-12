@@ -53,7 +53,7 @@ final class SettingsSync {
 
     /// Settings that follow the user between Macs.
     static var syncedKeys: [String] {
-        Preferences.keys.filter { $0 != "keystrokeScreen" } + ["showInDock", "showInMenuBar", "checkForUpdatesAutomatically"]
+        Preferences.keys.filter { $0 != "keystrokeScreen" } + ["showInDock", "showInMenuBar", UpdatePolicy.key]
     }
 
     nonisolated static var iCloudDrive: URL {
@@ -202,6 +202,7 @@ final class SettingsSync {
             if let value = remote.settings[key] { defaults.set(value, forKey: key) } else { defaults.removeObject(forKey: key) }
         }
         Preferences.shared.reload()
+        AutoUpdater.shared.policy = UpdatePolicy.current
         HotKeyCenter.shared.apply()
         PresenceSettings.shared.reload()
         localModified = remote.updatedAt

@@ -32,9 +32,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             if !InputMonitor.shared.isTrusted { InputMonitor.shared.requestTrust() }
         }
 
-        if UserDefaults.standard.object(forKey: "checkForUpdatesAutomatically") as? Bool ?? true {
-            UpdateController.checkForUpdates(silent: true)
-        }
+        AutoUpdater.shared.start()
         if !AppPresence.showInMenuBar && !AppPresence.showInDock { showSettings() }
     }
 
@@ -86,7 +84,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         menu.addItem(.separator())
         menu.addItem(item("Settings…", #selector(showSettings), key: ","))
-        if let pending = UpdateAvailability.shared.pending {
+        if let staged = AutoUpdater.shared.staged {
+            menu.addItem(item("Update to \(staged.version) Now (Otherwise Installs When Idle)", #selector(installUpdateNow)))
+        } else if let pending = UpdateAvailability.shared.pending {
             menu.addItem(item("Update to \(pending)…", #selector(checkForUpdates)))
         } else {
             menu.addItem(item("Check for Updates…", #selector(checkForUpdates)))
@@ -134,6 +134,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc func toggleArrow() { effects.toggleArrow() }
     @objc func showSettings() { SettingsWindow.shared.show() }
     @objc func checkForUpdates() { UpdateController.checkForUpdates() }
+    @objc func installUpdateNow() { AutoUpdater.shared.installNow() }
     @objc func quit() { NSApp.terminate(nil) }
 
     @objc func allowAccessibility() {
