@@ -39,11 +39,19 @@ final class HUDPanel {
             string.append(NSAttributedString(string: "  "))
         }
         string.append(NSAttributedString(string: text))
-        string.addAttributes([.font: font, .foregroundColor: NSColor.white],
+        // The attributed string's own paragraph style decides wrapping, not the label's
+        // lineBreakMode: without this, a line that is a hair too wide wrapped and its
+        // last entry vanished below the box.
+        let paragraph = NSMutableParagraphStyle()
+        paragraph.alignment = .center
+        paragraph.lineBreakMode = .byTruncatingHead
+        string.addAttributes([.font: font, .foregroundColor: NSColor.white, .paragraphStyle: paragraph],
                              range: NSRange(location: 0, length: string.length))
         label.attributedStringValue = string
 
-        let textSize = label.intrinsicContentSize
+        // Measured by the field's own cell, which adds its text insets to the string's size.
+        let measured = label.cell?.cellSize(forBounds: NSRect(x: 0, y: 0, width: 100_000, height: 1_000)) ?? string.size()
+        let textSize = NSSize(width: ceil(measured.width) + 2, height: ceil(measured.height))
         let padX = fontSize * 0.7, padY = fontSize * 0.35
         let maxWidth = screen.visibleFrame.width - 80
         let size = NSSize(width: min(textSize.width + padX * 2, maxWidth), height: textSize.height + padY * 2)
@@ -53,6 +61,11 @@ final class HUDPanel {
         background.layer?.backgroundColor = color.cgColor
         background.layer?.cornerRadius = min(size.height / 2, fontSize * 0.55)
         label.frame = NSRect(x: padX, y: padY, width: size.width - padX * 2, height: textSize.height)
+        // A borderless panel that is already on screen does not redraw its content on
+        // its own after a resize, which left the previous text showing in a box sized
+        // for the new one.
+        panel.contentView?.needsDisplay = true
+        panel.displayIfNeeded()
 
         generation += 1
         let shown = generation
@@ -100,7 +113,7 @@ final class KeystrokeDisplay {
     func add(_ stroke: Keystroke) {
         guard prefs.keystrokeFilter.shows(stroke.modifiers) else { return }
         pendingModifiers = ""
-        line.add(stroke)
+        line.add(stroke, asCombo: prefs.keystrokeFilter == .combos)
         refresh()
     }
 
@@ -115,9 +128,14 @@ final class KeystrokeDisplay {
 
     func showSample() {
         line.clear()
-        line.add(Keystroke(keyCode: 40, modifiers: [.command, .shift], charactersIgnoringModifiers: "k", characters: "K"))
-        for c in "Hello" {
-            line.add(Keystroke(keyCode: 0, modifiers: [], charactersIgnoringModifiers: String(c), characters: String(c)))
+        let combos = prefs.keystrokeFilter == .combos
+        line.add(Keystroke(keyCode: 40, modifiers: [.command, .shift], charactersIgnoringModifiers: "k", characters: "K"), asCombo: combos)
+        if combos {
+            line.add(Keystroke(keyCode: 8, modifiers: [.command], charactersIgnoringModifiers: "c", characters: "c"), asCombo: true)
+        } else {
+            for c in "Hello" {
+                line.add(Keystroke(keyCode: 0, modifiers: [], charactersIgnoringModifiers: String(c), characters: String(c)))
+            }
         }
         refresh()
     }

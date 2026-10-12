@@ -233,6 +233,8 @@ struct KeystrokeSettings: View {
                 Picker("Show", selection: $prefs.keystrokeFilter) {
                     ForEach(KeystrokeFilter.allCases, id: \.self) { Text($0.title).tag($0) }
                 }
+                .pickerStyle(.radioGroup)
+                Text(prefs.keystrokeFilter.detail).font(.callout).foregroundStyle(.secondary)
                 Toggle("Hide ClickLens's own shortcuts", isOn: $prefs.ignoreOwnHotKeys)
             }
             Section {

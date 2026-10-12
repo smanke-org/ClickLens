@@ -21,11 +21,22 @@ private func key(_ code: UInt16, _ chars: String, _ mods: KeyModifiers = []) -> 
 
 @Test func filtersMatchTheirDescriptions() {
     #expect(KeystrokeFilter.all.shows([]))
-    #expect(!KeystrokeFilter.withModifiers.shows([]))
-    #expect(KeystrokeFilter.withModifiers.shows([.shift]))
-    #expect(!KeystrokeFilter.shortcutsOnly.shows([.shift]))
-    #expect(!KeystrokeFilter.shortcutsOnly.shows([.function]))
-    #expect(KeystrokeFilter.shortcutsOnly.shows([.option]))
+    #expect(!KeystrokeFilter.combos.shows([]))
+    #expect(!KeystrokeFilter.combos.shows([.function]))
+    for m: KeyModifiers in [.shift, .option, .control, .command] { #expect(KeystrokeFilter.combos.shows(m)) }
+}
+
+@Test func olderStoredFiltersBecomeCombos() {
+    #expect(KeystrokeFilter(stored: "withModifiers") == .combos)
+    #expect(KeystrokeFilter(stored: "shortcutsOnly") == .combos)
+    #expect(KeystrokeFilter(stored: nil) == .all)
+}
+
+@Test func combosKeepShiftAndStandAlone() {
+    var line = KeystrokeLine()
+    line.add(key(0, "A", [.shift]), asCombo: true)
+    line.add(key(8, "c", [.command]), asCombo: true)
+    #expect(line.entries == ["⇧A", "⌘C"])
 }
 
 @Test func typingCollectsIntoOneRunAndShortcutsStandAlone() {

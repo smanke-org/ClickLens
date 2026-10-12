@@ -29,27 +29,42 @@ public struct KeyModifiers: OptionSet, Hashable, Sendable {
 
 /// Which keystrokes appear on screen.
 public enum KeystrokeFilter: String, CaseIterable, Sendable {
-    /// Everything, including ordinary typing.
+    /// Everything, including ordinary typing, collected into a running line.
     case all
-    /// Only keys pressed with a modifier, Shift included.
-    case withModifiers
-    /// Only shortcuts: keys pressed with ⌘, ⌃ or ⌥.
-    case shortcutsOnly
+    /// Only keys pressed together with ⌘, ⌥, ⇧ or ⌃, each shown as its own combination.
+    case combos
 
-    public var title: String {
-        switch self {
-        case .all: "All keystrokes"
-        case .withModifiers: "Only keys with modifiers"
-        case .shortcutsOnly: "Only shortcuts (⌘ ⌃ ⌥)"
+    /// Reads a stored value, including the two filters earlier versions offered, which
+    /// both showed only keys with modifiers.
+    public init(stored: String?) {
+        switch stored {
+        case "all": self = .all
+        case "combos", "withModifiers", "shortcutsOnly": self = .combos
+        default: self = .all
         }
     }
 
+    public var title: String {
+        switch self {
+        case .all: "Everything you type"
+        case .combos: "Key combinations only"
+        }
+    }
+
+    public var detail: String {
+        switch self {
+        case .all: "Every key appears, with typing collected into one line."
+        case .combos: "Only keys pressed with ⌘ ⌥ ⇧ or ⌃ appear, such as ⌘C or ⇧⌘K. Ordinary typing stays private."
+        }
+    }
+
+    /// The modifiers that make a key press a combination.
+    public static let comboModifiers: KeyModifiers = [.control, .option, .shift, .command]
+
     public func shows(_ modifiers: KeyModifiers) -> Bool {
-        let relevant = modifiers.subtracting(.function)
         switch self {
         case .all: return true
-        case .withModifiers: return !relevant.isEmpty
-        case .shortcutsOnly: return !relevant.intersection(.shortcut).isEmpty
+        case .combos: return !modifiers.intersection(Self.comboModifiers).isEmpty
         }
     }
 }
@@ -140,8 +155,13 @@ public struct KeystrokeLine: Equatable, Sendable {
     public var text: String { entries.joined(separator: "  ") }
     public var isEmpty: Bool { entries.isEmpty }
 
-    public mutating func add(_ stroke: Keystroke) {
-        if stroke.isTyping {
+    /// - Parameter asCombo: show the key with all its modifiers, Shift included, as its
+    ///   own entry, rather than letting it join a run of typing.
+    public mutating func add(_ stroke: Keystroke, asCombo: Bool = false) {
+        if asCombo {
+            entries.append(stroke.label)
+            lastWasTyping = false
+        } else if stroke.isTyping {
             if lastWasTyping, let last = entries.last {
                 entries[entries.count - 1] = last + stroke.typedText
             } else {

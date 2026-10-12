@@ -139,7 +139,7 @@ final class Preferences {
         clicksHotKey = codable("clicksHotKey", Defaults.clicksHotKey)
 
         keystrokesHotKey = codable("keystrokesHotKey", Defaults.keystrokesHotKey)
-        keystrokeFilter = KeystrokeFilter(rawValue: d.string(forKey: "keystrokeFilter") ?? "") ?? .all
+        keystrokeFilter = KeystrokeFilter(stored: d.string(forKey: "keystrokeFilter"))
         keystrokeFontSize = double("keystrokeFontSize", Defaults.keystrokeFontSize)
         keystrokeBackground = codable("keystrokeBackground", Defaults.keystrokeBackground)
         keystrokeFadeSeconds = double("keystrokeFadeSeconds", Defaults.keystrokeFadeSeconds)
