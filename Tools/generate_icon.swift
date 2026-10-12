@@ -1,7 +1,7 @@
 #!/usr/bin/env swift
 // Generates the app icon in the same periodic-table style as M3 Tracker: atomic number
 // "27", tipped 45° to the left, the "Cl" symbol, and the name along the bottom, on
-// a saturated gold tile, matching the sibling apps.
+// the glowing phosphor green of The X-Files logo.
 // Run with:
 //   swift Tools/generate_icon.swift
 //
@@ -31,7 +31,7 @@ let cornerRadius = side * 0.215
 
 let tilePath = CGPath(roundedRect: tile, cornerWidth: cornerRadius, cornerHeight: cornerRadius, transform: nil)
 
-// MARK: - Gold body
+// MARK: - Green body
 
 ctx.saveGState()
 ctx.addPath(tilePath)
@@ -39,8 +39,8 @@ ctx.clip()
 
 let colorSpace = CGColorSpaceCreateDeviceRGB()
 let bodyColors = [
-    NSColor(srgbRed: 1.00, green: 0.82, blue: 0.12, alpha: 1.0).cgColor,
-    NSColor(srgbRed: 0.91, green: 0.62, blue: 0.00, alpha: 1.0).cgColor,
+    NSColor(srgbRed: 0.47, green: 1.00, blue: 0.32, alpha: 1.0).cgColor,
+    NSColor(srgbRed: 0.00, green: 0.60, blue: 0.16, alpha: 1.0).cgColor,
 ] as CFArray
 let bodyGradient = CGGradient(colorsSpace: colorSpace, colors: bodyColors, locations: [0.0, 1.0])!
 ctx.drawLinearGradient(
