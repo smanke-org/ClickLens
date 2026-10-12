@@ -84,27 +84,27 @@ func size(of string: String, size: CGFloat) -> NSSize {
 }
 
 // Atomic number, top-left, tipped 45° to the left (counterclockwise) about
-// its own centre. Nudged up in the small variant so it still reads once the
+// its own center. Nudged up in the small variant so it still reads once the
 // name is gone.
 let number = "27"
 let numberSize = side * (includeName ? 0.115 : 0.135)
 let numberInset = side * 0.075
 let numberBox = size(of: number, size: numberSize)
-let numberCentre = CGPoint(
+let numberCenter = CGPoint(
     x: tile.minX + numberInset + numberBox.width / 2,
     y: tile.maxY - numberInset - numberBox.height / 2
 )
 ctx.saveGState()
-ctx.translateBy(x: numberCentre.x, y: numberCentre.y)
+ctx.translateBy(x: numberCenter.x, y: numberCenter.y)
 ctx.rotate(by: .pi / 4)
 draw(number, size: numberSize, at: CGPoint(x: -numberBox.width / 2, y: -numberBox.height / 2))
 ctx.restoreGState()
 
-// The element symbol, centred. Without the name below it, it grows and recentres to
+// The element symbol, centered. Without the name below it, it grows and recenters to
 // fill the tile.
 let symbol = "Cl"
 // A two-letter symbol is wider than M3's "M³", so the nameless variant can't grow as far without
-// running into the 27; it sits a little below centre to clear it.
+// running into the 27; it sits a little below center to clear it.
 let symbolSize = side * (includeName ? 0.50 : 0.54)
 let symbolBox = size(of: symbol, size: symbolSize)
 draw(symbol, size: symbolSize, at: CGPoint(

@@ -34,6 +34,12 @@ final class Effects {
 
     func start() {
         OverlayController.shared.start()
+        OverlayController.shared.onBoxFinished = { [weak self] in
+            // One box per shortcut press unless the user asked to keep drawing, so the
+            // mouse goes straight back to their apps.
+            guard let self, self.boxOn, !self.prefs.boxKeepDrawing else { return }
+            self.toggleBox(announce: false)
+        }
         let input = InputMonitor.shared
         input.onMouseDown = { [weak self] button, count, location in
             // Drawing a box is not a click to show.
@@ -115,12 +121,24 @@ final class Effects {
         onChange?()
     }
 
-    func toggleBox() {
+    func toggleBox(announce: Bool = true) {
         boxOn.toggle()
+        if boxOn {
+            appBeforeDrawing = NSWorkspace.shared.frontmostApplication
+        }
         OverlayController.shared.setDrawing(boxOn)
-        ToggleAnnouncer.shared.announce(boxOn ? "Drag to Draw a Box · Esc to Finish" : "Box Drawing Off", symbol: "rectangle.dashed")
+        if !boxOn, let app = appBeforeDrawing, app != NSRunningApplication.current {
+            // Hand the keyboard back to the app that was in front before drawing began.
+            app.activate()
+        }
+        if announce {
+            let hint = prefs.boxKeepDrawing ? "Drag to Draw Boxes · Esc to Finish" : "Drag to Draw a Box"
+            ToggleAnnouncer.shared.announce(boxOn ? hint : "Box Drawing Off", symbol: "rectangle.dashed")
+        }
         onChange?()
     }
+
+    @ObservationIgnored private var appBeforeDrawing: NSRunningApplication?
 
     private func updateSpotlight() {
         OverlayController.shared.setSpotlight(spotlightOn || previewingSpotlight)

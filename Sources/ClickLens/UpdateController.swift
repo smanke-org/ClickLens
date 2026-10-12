@@ -338,7 +338,7 @@ enum UpdateController {
     /// refused, and the alert opened by `runModal()` sits in the background.
     /// That kept "Update and Restart" disabled (InstallConsent waits for the app
     /// to be active) until the user clicked the Dock icon. Ordering the alert's
-    /// window front with the request is honoured. Reproduced and verified with a
+    /// window front with the request is honored. Reproduced and verified with a
     /// harness on macOS 27: without this, never active; with it, active and key
     /// within 0.25 s.
     @MainActor

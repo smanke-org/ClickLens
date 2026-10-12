@@ -124,6 +124,8 @@ final class OverlayController: NSObject {
     private var drawingBox: UUID?
     /// Box-drawing mode: the overlays take the mouse instead of passing it through.
     private(set) var drawing = false
+    /// Called when a drag ends, so drawing mode can end after one box.
+    var onBoxFinished: (() -> Void)?
     /// How long a finished box fades out over.
     private static let boxFadeDuration = 0.4
     /// Ring for each held button, so it follows the pointer until release.
@@ -229,6 +231,7 @@ final class OverlayController: NSObject {
                 if let i = boxes.firstIndex(where: { $0.id == id }) { boxes[i].end = pointer }
                 finishBox(id)
             }
+            onBoxFinished?()
         }
         wake()
     }
@@ -357,7 +360,7 @@ final class OverlayController: NSObject {
         overlay.dim.fillColor = color.cgColor
         overlay.dim.isHidden = false
 
-        // The soft edge: a radial fade inside the circle, from clear to the dim colour
+        // The soft edge: a radial fade inside the circle, from clear to the dim color
         // at the rim, so it meets the dimmed area without a seam.
         let softness = min(max(prefs.spotlightSoftness, 0), 0.95)
         overlay.edge.isHidden = softness <= 0

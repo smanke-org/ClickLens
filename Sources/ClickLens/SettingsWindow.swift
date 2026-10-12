@@ -138,7 +138,7 @@ struct SpotlightSettings: View {
                             format: percent, onEditing: preview)
                 ValueSlider(title: "Dimming", value: $prefs.dimColor.alpha, range: 0.05...0.95,
                             format: percent, onEditing: preview)
-                ColorPicker("Dim colour", selection: $prefs.dimColor.colorKeepingAlpha, supportsOpacity: false)
+                ColorPicker("Dim color", selection: $prefs.dimColor.colorKeepingAlpha, supportsOpacity: false)
             } header: {
                 Text("Look")
             } footer: {
@@ -161,7 +161,7 @@ struct SpotlightSettings: View {
 }
 
 private extension Binding where Value == RGBA {
-    /// Edits only the colour, keeping the stored opacity.
+    /// Edits only the color, keeping the stored opacity.
     var colorKeepingAlpha: Binding<Color> {
         Binding<Color>(
             get: { Color(nsColor: wrappedValue.with(alpha: 1).nsColor) },
@@ -339,12 +339,15 @@ struct BoxSettings: View {
                         Button(effects.boxOn ? "Stop Drawing" : "Start Drawing") { effects.toggleBox() }
                     }
                 }
+                Toggle("Keep drawing until Esc", isOn: $prefs.boxKeepDrawing)
             } footer: {
-                Text("Press the shortcut, then click and drag to draw a box around anything on screen. Draw as many as you like; press Esc or the shortcut again to go back to using your Mac normally.")
+                Text(prefs.boxKeepDrawing
+                     ? "Press the shortcut, then click and drag to draw boxes around anything on screen. While drawing, clicks go to ClickLens; press Esc or the shortcut again to go back to using your Mac."
+                     : "Press the shortcut, then click and drag to draw a box around anything on screen. When you let go, your Mac is back to normal. Press Esc to cancel before drawing.")
                     .font(.caption).foregroundStyle(.secondary)
             }
             Section("Look") {
-                ColorPicker("Line colour", selection: $prefs.boxColor.color, supportsOpacity: true)
+                ColorPicker("Line color", selection: $prefs.boxColor.color, supportsOpacity: true)
                 ValueSlider(title: "Thickness", value: $prefs.boxThickness, range: 1...20, step: 1, format: points)
                 ValueSlider(title: "Fade after", value: $prefs.boxFadeAfter, range: 0.5...30, step: 0.5, format: seconds)
                 LabeledContent("Preview") {
@@ -404,7 +407,7 @@ struct GeneralSettings: View {
             } header: {
                 Text("iCloud")
             } footer: {
-                Text("Shortcuts, colours, sizes and other settings follow you to every Mac signed in to the same iCloud account with sync turned on. Open at login and the keystroke screen stay separate on each Mac.")
+                Text("Shortcuts, colors, sizes and other settings follow you to every Mac signed in to the same iCloud account with sync turned on. Open at login and the keystroke screen stay separate on each Mac.")
                     .font(.caption).foregroundStyle(.secondary)
             }
             Section("Updates") {
@@ -428,7 +431,7 @@ struct GeneralSettings: View {
                 HotKeyCenter.shared.apply()
             }
         } message: {
-            Text("Shortcuts, colours and sizes go back to how ClickLens started. Where it appears and login stay as they are.")
+            Text("Shortcuts, colors and sizes go back to how ClickLens started. Where it appears and login stay as they are.")
         }
     }
 }

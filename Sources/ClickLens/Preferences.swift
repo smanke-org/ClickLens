@@ -3,7 +3,7 @@ import ClickLensKit
 import Observation
 import SwiftUI
 
-/// A colour with its opacity, stored as plain numbers so it round-trips through
+/// A color with its opacity, stored as plain numbers so it round-trips through
 /// UserDefaults without archiving an NSColor.
 struct RGBA: Codable, Equatable {
     var red: Double, green: Double, blue: Double, alpha: Double
@@ -68,6 +68,8 @@ final class Preferences {
     var boxThickness: Double = Defaults.boxThickness { didSet { save(boxThickness, "boxThickness") } }
     /// Seconds a finished box stays before it fades.
     var boxFadeAfter: Double = Defaults.boxFadeAfter { didSet { save(boxFadeAfter, "boxFadeAfter") } }
+    /// Stay in drawing mode for more boxes until Esc, instead of ending after one.
+    var boxKeepDrawing: Bool = false { didSet { save(boxKeepDrawing, "boxKeepDrawing") } }
 
     // MARK: General
     /// Show a short on-screen note when an effect is switched on or off.
@@ -105,7 +107,7 @@ final class Preferences {
         "clickExpands", "clickFadeDuration", "leftClickColor", "rightClickColor", "otherClickColor", "clickSound",
         "clickVolume", "clicksHotKey", "keystrokesHotKey", "keystrokeFilter", "keystrokeFontSize",
         "keystrokeBackground", "keystrokeFadeSeconds", "keystrokeScreen", "ignoreOwnHotKeys", "announceToggles",
-        "boxHotKey", "boxColor", "boxThickness", "boxFadeAfter",
+        "boxHotKey", "boxColor", "boxThickness", "boxFadeAfter", "boxKeepDrawing",
     ]
 
     @ObservationIgnored private var loading = false
@@ -166,6 +168,7 @@ final class Preferences {
         boxColor = codable("boxColor", Defaults.boxColor)
         boxThickness = double("boxThickness", Defaults.boxThickness)
         boxFadeAfter = double("boxFadeAfter", Defaults.boxFadeAfter)
+        boxKeepDrawing = bool("boxKeepDrawing", false)
     }
 
     private func save(_ value: Any, _ key: String) {
