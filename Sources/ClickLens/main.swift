@@ -14,8 +14,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let effects = Effects.shared
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        NSApp.mainMenu = AppPresence.mainMenu(appName: AppInfo.name, settingsTitle: "Settings…",
-                                              target: self, settings: #selector(showSettings))
+        let mainMenu = AppPresence.mainMenu(appName: AppInfo.name, settingsTitle: "Settings…",
+                                            target: self, settings: #selector(showSettings))
+        // Right below About in the app menu.
+        mainMenu.items.first?.submenu?.insertItem(item("Our other apps…", #selector(showOtherApps)), at: 1)
+        NSApp.mainMenu = mainMenu
         effects.onChange = { [weak self] in self?.refreshIcon() }
         // Set at the end of the first launch, so its absence means a brand-new install.
         let newInstall = !UserDefaults.standard.bool(forKey: "askedForAccessibility")
@@ -95,6 +98,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             menu.addItem(item("Check for Updates…", #selector(checkForUpdates)))
         }
         menu.addItem(item("About \(AppInfo.name)", #selector(showAbout)))
+        menu.addItem(item("Our other apps…", #selector(showOtherApps)))
         menu.addItem(.separator())
         let version = NSMenuItem(title: "\(AppInfo.name) \(AppInfo.displayVersion)", action: nil, keyEquivalent: "")
         version.isEnabled = false
@@ -145,6 +149,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         InputMonitor.openAccessibilitySettings()
     }
 
+    /// The developer's site, which lists every app.
+    @objc func showOtherApps() {
+        if let url = URL(string: "https://stevemanke.com/") { NSWorkspace.shared.open(url) }
+    }
     @objc func showAbout() {
         NSApp.activate(ignoringOtherApps: true)
         NSApp.orderFrontStandardAboutPanel(nil)
