@@ -57,6 +57,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
 
+    /// `clicklens://` URLs (from ToolHUD, Shortcuts or a script) switch the effect they name,
+    /// as its shortcut does.
+    func application(_ application: NSApplication, open urls: [URL]) {
+        for url in urls where url.scheme == "clicklens" {
+            switch url.host {
+            case "spotlight": effects.toggleSpotlight()
+            case "clicks": effects.toggleClicks()
+            case "keystrokes": effects.toggleKeystrokes()
+            case "box": effects.toggleBox()
+            case "arrow": effects.toggleArrow()
+            default: showSettings()
+            }
+        }
+    }
+
     // MARK: - Menu bar
 
     private func setUpStatusItem() {

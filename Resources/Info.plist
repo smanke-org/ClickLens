@@ -16,6 +16,17 @@
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
 	<string>1.5.5</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>ClickLens</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>clicklens</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleVersion</key>
 	<string>1.5.5</string>
 	<key>LSApplicationCategoryType</key>
@@ -26,5 +37,68 @@
 	<true/>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright © 2026 Steve Manke</string>
+	<key>ToolHUDActions</key>
+	<array>
+		<dict>
+			<key>activates</key>
+			<false/>
+			<key>id</key>
+			<string>spotlight</string>
+			<key>shortTitle</key>
+			<string>Spotlight</string>
+			<key>symbol</key>
+			<string>circle.dashed.inset.filled</string>
+			<key>title</key>
+			<string>Spotlight</string>
+		</dict>
+		<dict>
+			<key>activates</key>
+			<false/>
+			<key>id</key>
+			<string>clicks</string>
+			<key>shortTitle</key>
+			<string>Click rings</string>
+			<key>symbol</key>
+			<string>cursorarrow.click.2</string>
+			<key>title</key>
+			<string>Click rings</string>
+		</dict>
+		<dict>
+			<key>activates</key>
+			<false/>
+			<key>id</key>
+			<string>keystrokes</string>
+			<key>shortTitle</key>
+			<string>Keystrokes</string>
+			<key>symbol</key>
+			<string>keyboard</string>
+			<key>title</key>
+			<string>Keystrokes</string>
+		</dict>
+		<dict>
+			<key>activates</key>
+			<false/>
+			<key>id</key>
+			<string>box</string>
+			<key>shortTitle</key>
+			<string>Draw box</string>
+			<key>symbol</key>
+			<string>rectangle.dashed</string>
+			<key>title</key>
+			<string>Draw a box</string>
+		</dict>
+		<dict>
+			<key>activates</key>
+			<false/>
+			<key>id</key>
+			<string>arrow</string>
+			<key>shortTitle</key>
+			<string>Draw arrow</string>
+			<key>symbol</key>
+			<string>arrow.up.right</string>
+			<key>title</key>
+			<string>Draw an arrow</string>
+		</dict>
+	</array>
 </dict>
 </plist>
