@@ -510,9 +510,9 @@ struct GeneralSettings: View {
     private var updateFooter: String {
         switch updater.policy {
         case .automatic:
-            "ClickLens checks every 30 minutes. A new version installs itself when no ClickLens effect has been on for 30 minutes, no app is presenting or keeping the screen awake, and your Mac hasn't been used for 2 minutes. You'll get a notification when it's done."
+            "ClickLens checks \(updater.interval.phrase). A new version installs itself when no ClickLens effect has been on for 30 minutes, no app is presenting or keeping the screen awake, and your Mac hasn't been used for 2 minutes. You'll get a notification when it's done."
         case .ask:
-            "ClickLens checks every 30 minutes and sends a notification when a new version is out. Nothing installs until you choose to."
+            "ClickLens checks \(updater.interval.phrase) and sends a notification when a new version is out. Nothing installs until you choose to."
         case .off:
             "ClickLens won't look for updates on its own. Use Check Now whenever you like."
         }
@@ -562,6 +562,9 @@ struct GeneralSettings: View {
             Section {
                 Picker("When an update is available", selection: $updater.policy) {
                     ForEach(UpdatePolicy.allCases, id: \.self) { Text($0.title).tag($0) }
+                }
+                if updater.policy != .off {
+                    UpdateIntervalPicker(interval: $updater.interval)
                 }
                 if let staged = updater.staged {
                     LabeledContent("Version \(staged.version) is ready") {

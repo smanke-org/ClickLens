@@ -22,7 +22,7 @@ Requires macOS 26 or later.
 - Every effect can also be switched from a URL, for ToolHUD, Shortcuts or scripts: `clicklens://spotlight`, `clicks`, `keystrokes`, `box` and `arrow`.
 - Every shortcut can be changed. An on-screen note can confirm each switch.
 - Optional iCloud sync keeps settings the same on every Mac signed in to your iCloud account (through iCloud Drive; turn it on in Settings › General).
-- Shows in the menu bar, the Dock, both, or neither. Can open at login. Checks GitHub for updates every 30 minutes and either asks first (the default) or installs them automatically when your Mac is idle and nothing is being presented.
+- Shows in the menu bar, the Dock, both, or neither. Can open at login. Checks GitHub for updates once a day (or as often as you choose, from every hour to once a year) and either asks first (the default) or installs them automatically when your Mac is idle and nothing is being presented.
 
 ## Building
 
