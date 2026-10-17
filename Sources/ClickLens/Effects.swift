@@ -45,6 +45,8 @@ final class Effects {
             guard let self, let tool = self.drawingTool, !self.keepDrawing(tool) else { return }
             self.setDrawing(nil, announce: false)
         }
+        OverlayController.shared.onWaitingForEscapeChanged = { [weak self] _ in self?.updateEscapeKey() }
+        HotKeyCenter.shared.onEscape = { [weak self] in self?.escapePressed() }
         let input = InputMonitor.shared
         input.onMouseDown = { [weak self] button, count, location in
             // Drawing is not a click to show.
@@ -59,8 +61,11 @@ final class Effects {
         }
         input.onKey = { [weak self] stroke, flags in
             guard let self else { return }
-            if self.drawingTool != nil, stroke.keyCode == 53, stroke.modifiers.isEmpty {   // Esc ends drawing
-                self.setDrawing(nil)
+            // Esc ends drawing, then clears marks waiting for it. This path needs
+            // Accessibility; it is the fallback for when the Esc hot key can't be registered.
+            if stroke.keyCode == 53, stroke.modifiers.isEmpty,
+               self.drawingTool != nil || OverlayController.shared.waitingForEscape {
+                self.escapePressed()
                 return
             }
             guard self.keystrokesOn else { return }
@@ -134,6 +139,20 @@ final class Effects {
         tool == .box ? prefs.boxKeepDrawing : prefs.arrowKeepDrawing
     }
 
+    /// While drawing, Esc stops drawing; otherwise it fades the marks waiting for it.
+    private func escapePressed() {
+        if drawingTool != nil {
+            setDrawing(nil)
+        } else {
+            OverlayController.shared.fadeMarksOnEscape()
+        }
+    }
+
+    /// Catch Esc only while something on screen uses it.
+    private func updateEscapeKey() {
+        HotKeyCenter.shared.catchesEscape = drawingTool != nil || OverlayController.shared.waitingForEscape
+    }
+
     /// Starts drawing with `tool`, switches tools, or (with nil) ends drawing.
     func setDrawing(_ tool: DrawTool?, announce: Bool = true) {
         let previous = drawingTool
@@ -143,6 +162,7 @@ final class Effects {
         }
         drawingTool = tool
         OverlayController.shared.setDrawing(tool)
+        updateEscapeKey()
         if tool == nil, let app = appBeforeDrawing, app != NSRunningApplication.current {
             // Hand the keyboard back to the app that was in front before drawing began.
             app.activate()

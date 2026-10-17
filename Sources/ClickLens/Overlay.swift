@@ -98,10 +98,23 @@ final class OverlayController: NSObject {
         let color: RGBA
         let thickness: Double
         let fadeAfter: Double
+        let dismissal: MarkDismissal
         let shape: ArrowShape
         let clickIsTip: Bool
-        /// When the drag ended; the mark fades once `fadeAfter` has passed.
+        /// When the drag ended; the mark fades once `fadeAfter` has passed, if it goes after a time.
         var finished: CFTimeInterval?
+        /// When Esc was pressed, for a mark that goes on Esc.
+        var escaped: CFTimeInterval?
+
+        var fadeStart: CFTimeInterval? {
+            dismissal.fadeStart(finished: finished, fadeAfter: fadeAfter, escaped: escaped)
+        }
+
+        /// Drawn and still on screen until Esc is pressed.
+        func waitsForEscape(now: CFTimeInterval) -> Bool {
+            guard dismissal.usesEscape, finished != nil, escaped == nil else { return false }
+            return fadeStart.map { now < $0 } ?? true
+        }
 
         var rect: CGRect {
             CGRect(x: min(start.x, end.x), y: min(start.y, end.y),
@@ -151,6 +164,9 @@ final class OverlayController: NSObject {
     private var drawing: Bool { tool != nil }
     /// Called when a drag ends, so drawing mode can end after one mark.
     var onMarkFinished: (() -> Void)?
+    /// Called when marks start or stop waiting for Esc, so Esc is caught only then.
+    var onWaitingForEscapeChanged: ((Bool) -> Void)?
+    private(set) var waitingForEscape = false
     /// How long a finished mark fades out over.
     private static let markFadeDuration = 0.4
     /// Ring for each held button, so it follows the pointer until release.
@@ -257,10 +273,11 @@ final class OverlayController: NSObject {
         switch tool {
         case .box:
             Mark(tool: .box, start: point, end: point, color: prefs.boxColor, thickness: prefs.boxThickness,
-                 fadeAfter: prefs.boxFadeAfter, shape: .classic, clickIsTip: false)
+                 fadeAfter: prefs.boxFadeAfter, dismissal: prefs.boxDismissal, shape: .classic, clickIsTip: false)
         case .arrow:
             Mark(tool: .arrow, start: point, end: point, color: prefs.arrowColor, thickness: prefs.arrowThickness,
-                 fadeAfter: prefs.arrowFadeAfter, shape: prefs.arrowShape, clickIsTip: prefs.arrowClickIsTip)
+                 fadeAfter: prefs.arrowFadeAfter, dismissal: prefs.arrowDismissal, shape: prefs.arrowShape,
+                 clickIsTip: prefs.arrowClickIsTip)
         }
     }
 
@@ -294,10 +311,21 @@ final class OverlayController: NSObject {
         }
     }
 
+    /// Fades every mark that was waiting for Esc. Returns whether there were any.
+    @discardableResult
+    func fadeMarksOnEscape() -> Bool {
+        let now = CACurrentMediaTime()
+        var any = false
+        for i in marks.indices where marks[i].waitsForEscape(now: now) {
+            marks[i].escaped = now
+            any = true
+        }
+        wake()
+        return any
+    }
+
     private func opacity(_ mark: Mark, now: CFTimeInterval) -> Double {
-        guard let finished = mark.finished else { return 1 }
-        let fadeStart = finished + mark.fadeAfter
-        guard now > fadeStart else { return 1 }
+        guard let fadeStart = mark.fadeStart, now > fadeStart else { return 1 }
         return max(0, 1 - (now - fadeStart) / Self.markFadeDuration)
     }
 
@@ -358,6 +386,11 @@ final class OverlayController: NSObject {
         }
 
         marks.removeAll { opacity($0, now: now) <= 0 }
+        let waiting = marks.contains { $0.waitsForEscape(now: now) }
+        if waiting != waitingForEscape {
+            waitingForEscape = waiting
+            onWaitingForEscapeChanged?(waiting)
+        }
 
         let active = spotlightLevel > 0 || spotlightTarget > 0 || !rings.isEmpty || !marks.isEmpty || drawing
         setVisible(active)

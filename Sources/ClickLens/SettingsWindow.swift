@@ -373,11 +373,11 @@ struct BoxSettings: View {
             Section("Look") {
                 ColorPicker("Line color", selection: $prefs.boxColor.color, supportsOpacity: true)
                 ValueSlider(title: "Thickness", value: $prefs.boxThickness, range: 1...20, step: 1, format: points)
-                ValueSlider(title: "Fade after", value: $prefs.boxFadeAfter, range: 0.5...30, step: 0.5, format: seconds)
                 LabeledContent("Preview") {
                     Button("Show Sample") { OverlayController.shared.showSample(.box) }
                 }
             }
+            MarkFadeSection(noun: "box", dismissal: $prefs.boxDismissal, fadeAfter: $prefs.boxFadeAfter)
         }
         .formStyle(.grouped)
     }
@@ -422,13 +422,41 @@ struct ArrowSettings: View {
             Section("Look") {
                 ColorPicker("Color", selection: $prefs.arrowColor.color, supportsOpacity: true)
                 ValueSlider(title: "Thickness", value: $prefs.arrowThickness, range: 1...20, step: 1, format: points)
-                ValueSlider(title: "Fade after", value: $prefs.arrowFadeAfter, range: 0.5...30, step: 0.5, format: seconds)
                 LabeledContent("Preview") {
                     Button("Show Sample") { OverlayController.shared.showSample(.arrow) }
                 }
             }
+            MarkFadeSection(noun: "arrow", dismissal: $prefs.arrowDismissal, fadeAfter: $prefs.arrowFadeAfter)
         }
         .formStyle(.grouped)
+    }
+}
+
+/// When a finished box or arrow fades out: after a time, on Esc, or whichever comes first.
+struct MarkFadeSection: View {
+    let noun: String
+    @Binding var dismissal: MarkDismissal
+    @Binding var fadeAfter: Double
+
+    var body: some View {
+        Section {
+            Picker("Fade out", selection: $dismissal) {
+                Text("After a number of seconds").tag(MarkDismissal.afterTime)
+                Text("When I press Esc").tag(MarkDismissal.onEscape)
+                Text("Whichever comes first").tag(MarkDismissal.both)
+            }
+            .pickerStyle(.radioGroup)
+            if dismissal.usesTime {
+                ValueSlider(title: "Fade after", value: $fadeAfter, range: 0.5...30, step: 0.5, format: seconds)
+            }
+        } header: {
+            Text("Fading")
+        } footer: {
+            if dismissal.usesEscape {
+                Text("Each \(noun) stays on screen until you press Esc\(dismissal.usesTime ? " or the time runs out" : ""). While one is showing, ClickLens takes the Esc key, so the app in front doesn't see it.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+        }
     }
 }
 

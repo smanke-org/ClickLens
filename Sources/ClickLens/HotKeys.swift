@@ -111,13 +111,25 @@ final class HotKeyCenter {
 
     static let shared = HotKeyCenter()
     var perform: ((Action) -> Void)?
+    /// Bare Esc, caught only while `catchesEscape` is on.
+    var onEscape: (() -> Void)?
     private var refs: [Action: EventHotKeyRef] = [:]
+    private var escapeRef: EventHotKeyRef?
     private var installed = false
+    private static let escapeID: UInt32 = 99
+
+    /// Takes Esc for ClickLens while marks wait for it. Registered as a hot key, it needs
+    /// no Accessibility permission, and the app in front never sees the Esc (so a Keynote
+    /// slideshow stays up). Every other time Esc is left alone.
+    var catchesEscape = false {
+        didSet { if catchesEscape != oldValue { updateEscape() } }
+    }
 
     /// Registers the shortcuts in Preferences, replacing earlier registrations.
     func apply() {
         installHandlerOnce()
         unregisterAll()
+        updateEscape()
         for action in Action.allCases {
             guard let key = action.hotKey else { continue }
             var ref: EventHotKeyRef?
@@ -140,6 +152,22 @@ final class HotKeyCenter {
     func unregisterAll() {
         for ref in refs.values { UnregisterEventHotKey(ref) }
         refs.removeAll()
+        // The recorder uses Esc to cancel.
+        if let escapeRef { UnregisterEventHotKey(escapeRef) }
+        escapeRef = nil
+    }
+
+    private func updateEscape() {
+        installHandlerOnce()
+        if catchesEscape, escapeRef == nil {
+            var ref: EventHotKeyRef?
+            let id = EventHotKeyID(signature: OSType(0x434C_4E53), id: Self.escapeID)
+            let status = RegisterEventHotKey(UInt32(kVK_Escape), 0, id, GetApplicationEventTarget(), 0, &ref)
+            if status == noErr { escapeRef = ref } else { NSLog("ClickLens: Esc not registered (\(status))") }
+        } else if !catchesEscape, let escapeRef {
+            UnregisterEventHotKey(escapeRef)
+            self.escapeRef = nil
+        }
     }
 
     private func installHandlerOnce() {
@@ -150,6 +178,7 @@ final class HotKeyCenter {
     }
 
     fileprivate func fire(_ id: UInt32) {
+        if id == Self.escapeID { onEscape?(); return }
         guard let action = Action(rawValue: id) else { return }
         perform?(action)
     }

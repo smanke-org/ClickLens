@@ -101,3 +101,14 @@ private func key(_ code: UInt16, _ chars: String, _ mods: KeyModifiers = []) -> 
         #expect(arrow.path.boundingBoxOfPath.width < 40, "\(shape)")
     }
 }
+
+@Test func marksFadeAfterTimeEscapeOrBoth() {
+    #expect(MarkDismissal.afterTime.fadeStart(finished: 10, fadeAfter: 3, escaped: 11) == 13)
+    #expect(MarkDismissal.onEscape.fadeStart(finished: 10, fadeAfter: 3, escaped: nil) == nil)
+    #expect(MarkDismissal.onEscape.fadeStart(finished: 10, fadeAfter: 3, escaped: 50) == 50)
+    #expect(MarkDismissal.both.fadeStart(finished: 10, fadeAfter: 3, escaped: 11) == 11)
+    #expect(MarkDismissal.both.fadeStart(finished: 10, fadeAfter: 3, escaped: nil) == 13)
+    #expect(MarkDismissal.both.fadeStart(finished: nil, fadeAfter: 3, escaped: 11) == nil)
+    #expect(MarkDismissal(stored: nil) == .afterTime)
+    #expect(MarkDismissal(stored: "both") == .both)
+}
