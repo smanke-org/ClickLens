@@ -18,8 +18,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                                             target: self, settings: #selector(showSettings))
         // Right below About in the app menu.
         mainMenu.items.first?.submenu?.insertItem(item("Our other apps…", #selector(showOtherApps)), at: 1)
+        // Help menu, with the standard ⌘? (macOS adds its search field).
+        let helpItem = NSMenuItem()
+        let help = NSMenu(title: "Help")
+        help.addItem(item("\(AppInfo.name) Help", #selector(showHelp), key: "?"))
+        helpItem.submenu = help
+        mainMenu.addItem(helpItem)
+        NSApp.helpMenu = help
         NSApp.mainMenu = mainMenu
         AppAppearance.start()
+        #if DEBUG
+        // A test run shares the installed app's settings, so it checks Help and stops
+        // before any effect, monitor or sync starts.
+        if let snapshot = ProcessInfo.processInfo.environment["CLICKLENS_DEBUG_HELP_TEST"] {
+            DebugHelpTest.run(snapshot: snapshot, delegate: self)
+            return
+        }
+        #endif
         effects.onChange = { [weak self] in self?.refreshIcon() }
         // Set at the end of the first launch, so its absence means a brand-new install.
         let newInstall = !UserDefaults.standard.bool(forKey: "askedForAccessibility")
@@ -105,6 +120,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
 
         menu.addItem(.separator())
+        let helpEntry = item("\(AppInfo.name) Help", #selector(showHelp))
+        helpEntry.image = NSImage(systemSymbolName: "questionmark.circle", accessibilityDescription: nil)
+        menu.addItem(helpEntry)
         menu.addItem(item("Settings…", #selector(showSettings), key: ","))
         if let staged = AutoUpdater.shared.staged {
             menu.addItem(item("Update to \(staged.version) Now (Otherwise Installs When Idle)", #selector(installUpdateNow)))
@@ -156,6 +174,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc func toggleBox() { effects.toggleBox() }
     @objc func toggleArrow() { effects.toggleArrow() }
     @objc func showSettings() { SettingsWindow.shared.show() }
+    @objc func showHelp() { HelpWindow.shared.show() }
     @objc func checkForUpdates() { UpdateController.checkForUpdates() }
     @objc func installUpdateNow() { AutoUpdater.shared.installNow() }
     @objc func quit() { NSApp.terminate(nil) }
