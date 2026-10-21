@@ -73,6 +73,7 @@ enum Help {
             .heading("Permission"),
             .text("Showing keystrokes needs Accessibility permission (macOS 27 calls it Device Control). Everything else works without it. If the menu bar menu shows \"Allow Keystroke Display…\", choose it."),
             .tip("Turn on \"Announce when an effect turns on or off\" in Settings › General to see a short notice each time, handy when you can't see the menu bar."),
+            .tip("While ToolHUD is running, ClickLens's menu moves into ToolHUD's menu bar menu as a submenu, and the icon here steps aside until ToolHUD quits. To keep the icon, turn off \"Put in ToolHUD's menu while ToolHUD is running\" in Settings."),
         ]),
 
         HelpTopic(id: "spotlight", title: "Spotlight", symbol: "circle.dashed.inset.filled", blocks: [

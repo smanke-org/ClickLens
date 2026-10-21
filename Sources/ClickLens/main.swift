@@ -43,9 +43,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         SettingsSync.shared.start()
 
         setUpStatusItem()
+        // ToolHUD can take the menu into its own while it runs.
         NotificationCenter.default.addObserver(forName: AppPresence.menuBarDidChange, object: nil, queue: .main) { _ in
-            MainActor.assumeIsolated { [weak self] in self?.statusItem?.isVisible = AppPresence.showInMenuBar }
+            MainActor.assumeIsolated { [weak self] in self?.statusItem?.isVisible = MenuHub.shared.showsOwnIcon }
         }
+        MenuHub.shared.onChange = { SettingsSync.shared.localDidChange() }
+        MenuHub.shared.start(menu: { [weak self] in
+            let menu = NSMenu()
+            self?.menuNeedsUpdate(menu)
+            return menu
+        }, icon: { [weak self] in self?.statusItem?.button?.image })
 
         // The keystroke display needs Accessibility; ask once on first launch so the
         // feature works the first time it is switched on.
@@ -95,7 +102,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let menu = NSMenu()
         menu.delegate = self
         item.menu = menu
-        item.isVisible = AppPresence.showInMenuBar
+        item.isVisible = MenuHub.shared.showsOwnIcon
         statusItem = item
         refreshIcon()
     }

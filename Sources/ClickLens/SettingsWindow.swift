@@ -514,6 +514,7 @@ struct ArrowShapeTile: View {
 struct GeneralSettings: View {
     @State private var prefs = Preferences.shared
     @State private var presence = PresenceSettings.shared
+    @State private var hub = MenuHub.shared
     @State private var login = LaunchAtLogin.shared
     @State private var confirmReset = false
     @State private var sync = SettingsSync.shared
@@ -536,6 +537,8 @@ struct GeneralSettings: View {
             Section("Where ClickLens appears") {
                 Toggle("Show in Dock", isOn: $presence.showInDock)
                 Toggle("Show in menu bar", isOn: $presence.showInMenuBar)
+                Toggle("Put in ToolHUD’s menu while ToolHUD is running", isOn: $hub.foldIntoToolHUD)
+                    .help("ToolHUD shows this menu as a submenu of its own, and ClickLens’s icon leaves the menu bar until ToolHUD quits.")
                 if !presence.showInDock && !presence.showInMenuBar {
                     Text(AppPresence.hiddenEverywhereNote(appName: "ClickLens", settingsName: "Settings"))
                         .font(.callout).foregroundStyle(.secondary)
@@ -646,6 +649,7 @@ final class PresenceSettings {
     func reload() {
         if showInDock != AppPresence.showInDock { showInDock = AppPresence.showInDock }
         if showInMenuBar != AppPresence.showInMenuBar { showInMenuBar = AppPresence.showInMenuBar }
+        MenuHub.shared.reload()
         // The status item follows the notification, which the setter only posts on a change.
         NotificationCenter.default.post(name: AppPresence.menuBarDidChange, object: nil)
     }
