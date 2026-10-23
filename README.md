@@ -32,3 +32,7 @@ Requires macOS 26 or later.
 swift test       # ClickLensKit unit tests
 ./release.sh 1.0.1
 ```
+
+## License
+
+© 2026 Steve Manke. All rights reserved.
