@@ -16,8 +16,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         let mainMenu = AppPresence.mainMenu(appName: AppInfo.name, settingsTitle: "Settings…",
                                             target: self, settings: #selector(showSettings))
-        // Right below About in the app menu.
-        mainMenu.items.first?.submenu?.insertItem(item("Our other apps…", #selector(showOtherApps)), at: 1)
+        // Right below About in the app menu, where Mac apps keep it.
+        mainMenu.items.first?.submenu?.insertItem(item("Check for Updates…", #selector(checkForUpdates)), at: 1)
+        mainMenu.items.first?.submenu?.insertItem(item("Our other apps…", #selector(showOtherApps)), at: 2)
         // Help menu, with the standard ⌘? (macOS adds its search field).
         let helpItem = NSMenuItem()
         let help = NSMenu(title: "Help")
