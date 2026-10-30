@@ -87,6 +87,8 @@ final class Preferences {
     // MARK: General
     /// Show a short on-screen note when an effect is switched on or off.
     var announceToggles: Bool = true { didSet { save(announceToggles, "announceToggles") } }
+    /// Quitting asks first, so a stray ⌘Q doesn't stop the effects and their shortcuts.
+    var confirmQuit: Bool = true { didSet { save(confirmQuit, "confirmQuit") } }
 
     enum Defaults {
         static let spotlightRadius = 140.0
@@ -124,6 +126,7 @@ final class Preferences {
         "keystrokeBackground", "keystrokeFadeSeconds", "keystrokeScreen", "ignoreOwnHotKeys", "announceToggles",
         "boxHotKey", "boxColor", "boxThickness", "boxFadeAfter", "boxKeepDrawing", "boxDismissal",
         "arrowHotKey", "arrowColor", "arrowThickness", "arrowFadeAfter", "arrowShape", "arrowClickIsTip", "arrowKeepDrawing", "arrowDismissal",
+        "confirmQuit",
     ]
 
     @ObservationIgnored private var loading = false
@@ -161,6 +164,7 @@ final class Preferences {
             "arrowHotKey": data(arrowHotKey), "arrowColor": data(arrowColor), "arrowThickness": arrowThickness,
             "arrowFadeAfter": arrowFadeAfter, "arrowShape": arrowShape.rawValue, "arrowClickIsTip": arrowClickIsTip,
             "arrowKeepDrawing": arrowKeepDrawing, "arrowDismissal": arrowDismissal.rawValue,
+            "confirmQuit": confirmQuit,
         ]
     }
 
@@ -220,6 +224,7 @@ final class Preferences {
         arrowClickIsTip = bool("arrowClickIsTip", false)
         arrowKeepDrawing = bool("arrowKeepDrawing", false)
         arrowDismissal = MarkDismissal(stored: d.string(forKey: "arrowDismissal"))
+        confirmQuit = bool("confirmQuit", true)
     }
 
     private func save(_ value: Any, _ key: String) {

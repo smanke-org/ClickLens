@@ -74,6 +74,7 @@ enum Help {
             .text("Showing keystrokes needs Accessibility permission (macOS 27 calls it Device Control). Everything else works without it. If the menu bar menu shows \"Allow Keystroke Display…\", choose it."),
             .tip("Turn on \"Announce when an effect turns on or off\" in Settings › General to see a short notice each time, handy when you can't see the menu bar."),
             .tip("While ToolHUD is running, ClickLens's menu moves into ToolHUD's menu bar menu as a submenu, and the icon here steps aside until ToolHUD quits. To keep the icon, turn off \"Put in ToolHUD's menu while ToolHUD is running\" in Settings."),
+            .tip("Quitting asks first, since the effects and their shortcuts stop while ClickLens is closed. Turn off \"Ask before quitting\" in Settings › General, or tick \"Don't ask again\" when it asks."),
         ]),
 
         HelpTopic(id: "spotlight", title: "Spotlight", symbol: "circle.dashed.inset.filled", blocks: [
@@ -149,7 +150,7 @@ enum Help {
         ]),
 
         HelpTopic(id: "sync", title: "Sync and Settings", symbol: "icloud", blocks: [
-            .text("Turn on \"Sync settings with your other Macs\" in Settings › General to share shortcuts, colors and sizes through iCloud Drive. Open at login and the keystroke screen stay separate on each Mac."),
+            .text("Turn on \"Sync settings with your other Macs\" in Settings › General to share shortcuts, colors, sizes and asking before quitting through iCloud Drive. Open at login and the keystroke screen stay separate on each Mac."),
             .text("Show in Dock and Show in menu bar choose where ClickLens appears. Reset to Defaults… puts shortcuts, colors and sizes back to how ClickLens started; where it appears and login stay as they are."),
         ]),
 

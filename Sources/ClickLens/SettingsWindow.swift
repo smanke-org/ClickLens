@@ -44,12 +44,12 @@ final class SettingsTabs: NSTabViewController {
         super.init(nibName: nil, bundle: nil)
         tabStyle = .toolbar
         transitionOptions = [.crossfade, .allowUserInteraction]
+        add("General", "gearshape", GeneralSettings())
         add("Spotlight", "circle.dashed.inset.filled", SpotlightSettings())
         add("Clicks", "cursorarrow.click.2", ClickSettings())
         add("Keystrokes", "keyboard", KeystrokeSettings())
         add("Box", "rectangle.dashed", BoxSettings())
         add("Arrow", "arrow.up.right", ArrowSettings())
-        add("General", "gearshape", GeneralSettings())
     }
 
     required init?(coder: NSCoder) { fatalError() }
@@ -552,6 +552,8 @@ struct GeneralSettings: View {
                 if let error = login.lastError {
                     Text(error).font(.callout).foregroundStyle(.red)
                 }
+                Toggle("Ask before quitting", isOn: $prefs.confirmQuit)
+                    .help("Quitting ClickLens asks first, so a stray ⌘Q doesn't stop the effects and their shortcuts.")
                 Toggle("Announce when an effect turns on or off", isOn: $prefs.announceToggles)
             }
             Section {
