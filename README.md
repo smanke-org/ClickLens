@@ -2,6 +2,8 @@
 
 ClickLens makes your pointer, clicks and keystrokes easy to follow when you present, demo or record your Mac screen. Press a shortcut and the screen dims around a spotlight that follows the pointer. Clicks draw colored rings, and the keys you press appear on screen.
 
+<p align="center"><img src="docs/images/clicklens-spotlight.jpg" width="800" alt="ClickLens dimming a sample project window except for a bright circle around the pointer"></p>
+
 ## Download
 
 **[⬇ Download ClickLens.dmg](https://github.com/smanke-org/ClickLens/releases/latest/download/ClickLens.dmg)**
@@ -23,6 +25,19 @@ Requires macOS 26 or later.
 - Every shortcut can be changed. An on-screen note can confirm each switch.
 - Optional iCloud sync keeps settings the same on every Mac signed in to your iCloud account (through iCloud Drive; turn it on in Settings › General).
 - Shows in the menu bar, the Dock, both, or neither. Can open at login. Checks GitHub for updates once a day (or as often as you choose, from every hour to once a year) and either asks first (the default) or installs them automatically when your Mac is idle and nothing is being presented.
+
+## Screenshots
+
+<table>
+<tr>
+<td width="50%"><img src="docs/images/clicklens-clicks.jpg" alt="A red double ring on the Share button for a double click, and a fading blue ring from a right click"><br><sub><b>Click rings.</b> A double ring for a double click, a different color for a right click.</sub></td>
+<td width="50%"><img src="docs/images/clicklens-keystrokes.jpg" alt="The key combinations Command-B, Shift-Command-K and Option-Command-S at the bottom of the screen"><br><sub><b>Keystrokes.</b> Key combinations shown at the bottom of the screen.</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/images/clicklens-boxes-arrows.jpg" alt="A red box around the Open items card, a curved arrow pointing at the box, and a block arrow pointing at the tallest bar in a chart"><br><sub><b>Boxes and arrows.</b> Point at anything, then let it fade.</sub></td>
+<td width="50%" align="center"><img src="docs/images/clicklens-settings-arrow.webp" width="320" alt="ClickLens Settings on the Arrow tab, with the click choice, five arrow shapes, color, thickness and fade time"><br><sub><b>Settings.</b> The Arrow tab, with five shapes to choose from.</sub></td>
+</tr>
+</table>
 
 ## Building
 
