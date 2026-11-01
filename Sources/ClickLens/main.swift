@@ -51,10 +51,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             return
         }
         #endif
-        effects.onChange = { [weak self] in self?.refreshIcon() }
+        effects.onChange = { [weak self] in
+            self?.refreshIcon()
+            ToolHUDFeatureStates.publish()
+        }
         // Set at the end of the first launch, so its absence means a brand-new install.
         let newInstall = !UserDefaults.standard.bool(forKey: "askedForAccessibility")
         effects.start()
+        // ToolHUD lights the buttons of the effects that are on.
+        ToolHUDFeatureStates.start { [effects] in
+            ["spotlight": effects.spotlightOn, "clicks": effects.clicksOn, "keystrokes": effects.keystrokesOn,
+             "box": effects.boxOn, "arrow": effects.arrowOn]
+        }
         if newInstall { SettingsSync.shared.adoptOnNewInstall() }
         SettingsSync.shared.start()
 
