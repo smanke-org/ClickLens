@@ -50,6 +50,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             DebugQuitTest.run(how)
             return
         }
+        // The update prompt, What's New and Settings drawn to PNGs; also starts nothing else.
+        if let folder = ProcessInfo.processInfo.environment["CLICKLENS_DEBUG_UPDATE_NOTES"] {
+            DebugUpdateNotes.run(folder: folder)
+            return
+        }
         #endif
         effects.onChange = { [weak self] in
             self?.refreshIcon()
@@ -85,7 +90,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             if !InputMonitor.shared.isTrusted { InputMonitor.shared.requestTrust() }
         }
 
-        AutoUpdater.shared.start()
+        AutoUpdater.shared.start(newInstall: newInstall)
         if !AppPresence.showInMenuBar && !AppPresence.showInDock { showSettings() }
     }
 
