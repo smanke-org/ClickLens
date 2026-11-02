@@ -146,7 +146,7 @@ enum Help {
                 ("⌘,", "Settings (from the menu bar menu)"),
                 ("⌘?", "This Help (from ClickLens's menus)"),
             ]),
-            .text("Change any shortcut on its effect's Settings tab: click the shortcut, then press the new keys."),
+            .text("Change any shortcut on its effect's Settings tab: click the shortcut, then press the new keys. ShortcutsLens lists them under their own names."),
         ]),
 
         HelpTopic(id: "sync", title: "Sync and Settings", symbol: "icloud", blocks: [
@@ -162,7 +162,7 @@ enum Help {
                 ("clicklens://box", "Draw a box"),
                 ("clicklens://arrow", "Draw an arrow"),
             ]),
-            .text("Use these links from Shortcuts, scripts or a launcher. ToolHUD's ClickLens buttons use them."),
+            .text("Use these links from Shortcuts, scripts or a launcher. ToolHUD's ClickLens buttons use them, and with \"Show which features are on\" turned on in ToolHUD, they get a green light while their effect is on."),
         ]),
 
         HelpTopic(id: "updates", title: "Updates", symbol: "arrow.down.circle", blocks: [
