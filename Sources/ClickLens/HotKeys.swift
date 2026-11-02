@@ -107,6 +107,17 @@ final class HotKeyCenter {
             case .arrow: return prefs.arrowHotKey
             }
         }
+
+        /// As the menu bar menu names it.
+        var title: String {
+            switch self {
+            case .spotlight: return "Spotlight"
+            case .clicks: return "Click Rings"
+            case .keystrokes: return "Keystrokes"
+            case .box: return "Draw Box"
+            case .arrow: return "Draw Arrow"
+            }
+        }
     }
 
     static let shared = HotKeyCenter()
@@ -140,6 +151,16 @@ final class HotKeyCenter {
             } else {
                 NSLog("ClickLens: shortcut \(key.display) for \(action) not registered (\(status)), probably taken by another app")
             }
+        }
+        ShortcutsLensReport.publish()
+    }
+
+    /// For ShortcutsLens: the shortcuts that registered. Esc is left out: it's held only
+    /// while marks wait for it.
+    var reportedShortcuts: [ShortcutsLensReport.Shortcut] {
+        Action.allCases.compactMap { action in
+            guard refs[action] != nil, let key = action.hotKey else { return nil }
+            return .init(id: "\(action)", title: action.title, keyCode: Int(key.keyCode), carbonModifiers: Int(key.modifiers))
         }
     }
 

@@ -94,6 +94,7 @@ final class Effects {
             }
         }
         HotKeyCenter.shared.apply()
+        ShortcutsLensReport.start { HotKeyCenter.shared.reportedShortcuts }
     }
 
     // MARK: - Toggles
