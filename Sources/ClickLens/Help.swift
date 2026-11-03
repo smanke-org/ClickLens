@@ -163,6 +163,16 @@ enum Help {
                 ("clicklens://arrow", "Draw an arrow"),
             ]),
             .text("Use these links from Shortcuts, scripts or a launcher. ToolHUD's ClickLens buttons use them, and with \"Show which features are on\" turned on in ToolHUD, they get a green light while their effect is on."),
+            .heading("Command line and AI agents"),
+            .text("ClickLens is also a command line tool, so scripts and AI agents such as Claude Code or Codex can see which effects are on, switch them, start or clear boxes and arrows, and read or change the settings in this window. Commands run in the open app, as its shortcuts and menus do. Resetting every setting needs --yes."),
+            .keys([
+                ("clicklens help", "List every command and its options"),
+                ("clicklens status", "Which effects are on, and the keystroke mode"),
+                ("clicklens effects on spotlight", "Turn the spotlight on (off, toggle, and clicks or keystrokes work too)"),
+                ("clicklens settings set spotlightRadius 200", "Change a setting; clicklens settings list shows them all"),
+                ("clicklens mcp", "Offer the same commands to MCP apps, such as Claude Desktop"),
+            ]),
+            .text("To type clicklens in Terminal, link it once: ln -s /Applications/ClickLens.app/Contents/MacOS/ClickLens ~/.local/bin/clicklens (with ~/.local/bin on your PATH). MCP apps take the full path to that program, followed by mcp."),
         ]),
 
         HelpTopic(id: "updates", title: "Updates", symbol: "arrow.down.circle", blocks: [

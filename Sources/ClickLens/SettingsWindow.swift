@@ -35,13 +35,14 @@ final class SettingsWindow: NSObject, NSWindowDelegate {
         if let window { WhatsNew.shared.present(on: window, asked: true) }
     }
 
-    #if DEBUG
-    var debugWindow: NSWindow? { window }
-
+    /// Settings on one tab, by its label ("Spotlight"): for the agent CLI and Debug snapshots.
     func show(tab: String) {
         show()
         (window?.contentViewController as? SettingsTabs)?.select(tab)
     }
+
+    #if DEBUG
+    var debugWindow: NSWindow? { window }
     #endif
 
     /// A size the user dragged to is kept for every pane, and next time.
@@ -150,11 +151,9 @@ final class SettingsTabs: NSTabViewController {
         selectionChanged()
     }
 
-    #if DEBUG
     func select(_ label: String) {
         if let index = tabViewItems.firstIndex(where: { $0.label == label }) { selectedTabViewItemIndex = index }
     }
-    #endif
 
     private func selectionChanged() {
         let item = tabViewItems[selectedTabViewItemIndex]

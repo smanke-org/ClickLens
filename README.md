@@ -26,6 +26,28 @@ Requires macOS 26 or later.
 - Optional iCloud sync keeps settings the same on every Mac signed in to your iCloud account (through iCloud Drive; turn it on in Settings › General).
 - Shows in the menu bar, the Dock, both, or neither. Can open at login. Checks GitHub for updates once a day (or as often as you choose, from every hour to once a year) and either asks first (the default) or installs them automatically when your Mac is idle and nothing is being presented. The update window shows what's new in the latest releases.
 
+## Command line and AI agents
+
+ClickLens is also a command line tool, so scripts and AI agents (Claude Code, Codex) can see which effects are on, switch the spotlight, click rings and keystrokes, start or clear boxes and arrows, and read or change the settings the Settings window shows. Commands run in the open app, as its shortcuts and menus do. Link it once to type `clicklens`:
+
+```bash
+ln -s /Applications/ClickLens.app/Contents/MacOS/ClickLens ~/.local/bin/clicklens
+```
+
+```bash
+clicklens help
+clicklens status --json
+clicklens effects on spotlight
+clicklens keystrokes mode combos
+clicklens settings set spotlightRadius 200
+```
+
+Every command takes `--json`. `settings reset` only shows what it would do until you add `--yes`. For MCP apps such as Claude Desktop, the same commands are served by `/Applications/ClickLens.app/Contents/MacOS/ClickLens mcp`:
+
+```bash
+claude mcp add --scope user clicklens -- /Applications/ClickLens.app/Contents/MacOS/ClickLens mcp
+```
+
 ## Screenshots
 
 <table>

@@ -1,10 +1,15 @@
 import AppKit
 import SwiftUI
 
+// `clicklens <command>` (the app binary under a short name): run it against the running app
+// and exit, without starting a second copy. See Agent/AgentCLI.swift.
+if let code = AgentCLI.runIfRequested() { exit(code) }
+
 let app = NSApplication.shared
 let delegate = AppDelegate()
 app.delegate = delegate
-app.setActivationPolicy(AppPresence.showInDock ? .regular : .accessory)
+// An agent CLI test copy (Debug, APP_STORE) stays out of the Dock.
+app.setActivationPolicy(AppPresence.showInDock && !AgentSocket.isTestRun ? .regular : .accessory)
 app.run()
 
 /// Quits ClickLens without asking: for quitting itself (installing an update, ending a test).
@@ -38,6 +43,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         mainMenu.addItem(helpItem)
         NSApp.helpMenu = help
         NSApp.mainMenu = mainMenu
+        #if DEBUG
+        // A test run of the agent CLI (APP_STORE): its own settings and the agent socket.
+        // Nothing else starts: no effects, overlays, input monitors, shortcuts, sync, menu bar
+        // item, ToolHUD hub, ShortcutsLens report, updater or Accessibility prompt.
+        if AgentSocket.isTestRun {
+            _ = Preferences.shared
+            AgentSocket.listen { AgentRouter.handle($0) }
+            return
+        }
+        #endif
         AppAppearance.start()
         #if DEBUG
         // A test run shares the installed app's settings, so it checks Help and stops
@@ -63,6 +78,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         // Set at the end of the first launch, so its absence means a brand-new install.
         let newInstall = !UserDefaults.standard.bool(forKey: "askedForAccessibility")
         effects.start()
+        // `clicklens` and the MCP server talk to the app through this.
+        AgentSocket.listen { AgentRouter.handle($0) }
         // ToolHUD lights the buttons of the effects that are on.
         ToolHUDFeatureStates.start { [effects] in
             ["spotlight": effects.spotlightOn, "clicks": effects.clicksOn, "keystrokes": effects.keystrokesOn,

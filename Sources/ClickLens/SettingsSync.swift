@@ -39,7 +39,7 @@ final class SettingsSync {
         set { defaults.set(newValue, forKey: Keys.localModified) }
     }
 
-    private let defaults = UserDefaults.standard
+    private let defaults = AppDefaults.store
     private var applying = false
     private var started = false
     private var writeTask: Task<Void, Never>?
