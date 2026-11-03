@@ -35,7 +35,7 @@ enum DebugHelpTest {
                 trace("topics=\(Help.topics.count) unresolved=\(unresolved) keys=\(Help.resolve("{hotkey:spotlight} {hotkey:clicks} {hotkey:keystrokes} {hotkey:box} {hotkey:arrow}"))")
                 let menu = NSMenu()
                 delegate.menuNeedsUpdate?(menu)
-                trace("menu: \(menu.items.map(\.title).filter { !$0.isEmpty })")
+                trace("menu: \(menu.items.map(\.plainTitle).filter { !$0.isEmpty })")
                 trace("help menu: \(NSApp.helpMenu?.items.map { $0.title + " " + $0.keyEquivalent } ?? [])")
                 HelpWindow.shared.show(topic: ProcessInfo.processInfo.environment["CLICKLENS_DEBUG_HELP_TOPIC"] ?? "box")
                 RunLoop.main.run(until: Date().addingTimeInterval(1))

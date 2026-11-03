@@ -178,27 +178,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
-        for item in effectItems() { menu.addItem(item) }
+        for item in effectItems(icons: true) { menu.addItem(item) }
 
         if !InputMonitor.shared.isTrusted {
             menu.addItem(.separator())
             let warn = NSMenuItem(title: "Allow Keystroke Display…", action: #selector(allowAccessibility), keyEquivalent: "")
             warn.target = self
-            warn.image = NSImage(systemSymbolName: "exclamationmark.triangle", accessibilityDescription: nil)
-            menu.addItem(warn)
+            menu.addItem(warn.showIcon("exclamationmark.triangle"))
         }
 
         menu.addItem(.separator())
         let helpEntry = item("\(AppInfo.name) Help", #selector(showHelp))
         helpEntry.image = NSImage(systemSymbolName: "questionmark.circle", accessibilityDescription: nil)
         menu.addItem(helpEntry)
-        menu.addItem(item("Settings…", #selector(showSettings), key: ","))
+        menu.addItem(item("Settings…", #selector(showSettings), key: ",").showIcon("gearshape"))
         if let staged = AutoUpdater.shared.staged {
-            menu.addItem(item("Update to \(staged.version) Now (Otherwise Installs When Idle)", #selector(installUpdateNow)))
+            menu.addItem(item("Update to \(staged.version) Now (Otherwise Installs When Idle)", #selector(installUpdateNow)).showIcon("arrow.down.circle"))
         } else if let pending = UpdateAvailability.shared.pending {
-            menu.addItem(item("Update to \(pending)…", #selector(checkForUpdates)))
+            menu.addItem(item("Update to \(pending)…", #selector(checkForUpdates)).showIcon("arrow.down.circle"))
         } else {
-            menu.addItem(item("Check for Updates…", #selector(checkForUpdates)))
+            menu.addItem(item("Check for Updates…", #selector(checkForUpdates)).showIcon("arrow.down.circle"))
         }
         menu.addItem(item("About \(AppInfo.name)", #selector(showAbout)))
         menu.addItem(item("Our other apps…", #selector(showOtherApps)))
@@ -209,22 +208,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(item("Quit \(AppInfo.name)", #selector(quit), key: "q"))
     }
 
-    private func effectItems() -> [NSMenuItem] {
+    /// The effect toggles; with `icons`, the three main effects get one (the status menu, not the Dock menu).
+    private func effectItems(icons: Bool = false) -> [NSMenuItem] {
         let prefs = Preferences.shared
-        let entries: [(String, Selector, Bool, HotKey?)] = [
-            ("Spotlight", #selector(toggleSpotlight), effects.spotlightOn, prefs.spotlightHotKey),
-            ("Click Rings", #selector(toggleClicks), effects.clicksOn, prefs.clicksHotKey),
-            ("Keystrokes", #selector(toggleKeystrokes), effects.keystrokesOn, prefs.keystrokesHotKey),
-            ("Draw Box", #selector(toggleBox), effects.boxOn, prefs.boxHotKey),
-            ("Draw Arrow", #selector(toggleArrow), effects.arrowOn, prefs.arrowHotKey),
+        let entries: [(String, Selector, Bool, HotKey?, String?)] = [
+            ("Spotlight", #selector(toggleSpotlight), effects.spotlightOn, prefs.spotlightHotKey, "circle.dashed.inset.filled"),
+            ("Click Rings", #selector(toggleClicks), effects.clicksOn, prefs.clicksHotKey, "cursorarrow.click.2"),
+            ("Keystrokes", #selector(toggleKeystrokes), effects.keystrokesOn, prefs.keystrokesHotKey, "keyboard"),
+            ("Draw Box", #selector(toggleBox), effects.boxOn, prefs.boxHotKey, nil),
+            ("Draw Arrow", #selector(toggleArrow), effects.arrowOn, prefs.arrowHotKey, nil),
         ]
-        return entries.map { title, action, on, hotKey in
+        return entries.map { title, action, on, hotKey, symbol in
             let menuItem = item(title, action)
             menuItem.state = on ? .on : .off
             if let shortcut = hotKey?.menuKeyEquivalent {
                 menuItem.keyEquivalent = shortcut.key
                 menuItem.keyEquivalentModifierMask = shortcut.mask
             }
+            if icons, let symbol { menuItem.showIcon(symbol) }
             return menuItem
         }
     }
