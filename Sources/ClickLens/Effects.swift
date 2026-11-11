@@ -94,7 +94,9 @@ final class Effects {
             }
         }
         HotKeyCenter.shared.apply()
-        ShortcutsLensReport.start { HotKeyCenter.shared.reportedShortcuts }
+        ShortcutsLensReport.start({ HotKeyCenter.shared.reportedShortcuts }, change: { id, keyCode, modifiers in
+            HotKeyCenter.shared.change(id: id, keyCode: keyCode, carbonModifiers: modifiers)
+        })
     }
 
     // MARK: - Toggles
