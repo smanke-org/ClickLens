@@ -56,6 +56,13 @@ enum DebugShortcutEditorTest {
         model.control = false; model.option = false; model.shift = false; model.command = false
         model.typed("k")
         out.append("bare k: combo \(model.combo?.display ?? "-") problem \(model.problem ?? "-")")
+        // Unshifted keys replace what's in the box, as the field sends its whole text.
+        model.typed("K=")
+        out.append("then = typed: key \(model.keyText) code \(model.keyCode.map(String.init) ?? "-") shift \(model.shift)")
+        model.typed("=k")
+        out.append("then k typed: key \(model.keyText) code \(model.keyCode.map(String.init) ?? "-")")
+        model.typed("")
+        out.append("emptied: key '\(model.keyText)' code \(model.keyCode.map(String.init) ?? "-")")
         model.choose(Int(kVK_F6))
         model.typed(model.keyText)  // the key field echoing the menu's choice
         out.append("F6 alone: key \(model.keyText) combo \(model.combo?.display ?? "-") problem \(model.problem ?? "-")")

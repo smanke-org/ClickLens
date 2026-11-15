@@ -194,14 +194,14 @@ struct ShortcutRecorder: NSViewRepresentable {
     func typed(_ text: String) {
         // A named key from the menu (“F6”, “Space”) comes back through here: keep it whole.
         if let code = keyCode, ShortcutKeyNames.name(code) == text { return }
-        if text.count > 1, let last = text.last { keyText = String(last); return }
-        guard !text.isEmpty else { keyCode = nil; return }
-        if let (code, needsShift) = ShortcutKeyNames.keyCode(for: text) {
+        let last = text.last.map(String.init) ?? ""
+        keyText = last
+        guard !last.isEmpty else { keyCode = nil; return }
+        if let (code, needsShift) = ShortcutKeyNames.keyCode(for: last) {
             keyCode = code
             if needsShift { shift = true }
-            // Show the base key: ⇧ + = stays “=”, not “+”.
-            let base = ShortcutKeyNames.name(code)
-            if base != text { keyText = base }
+            // Show the key's own name: ⇧ + = shows “=”, not “+”.
+            keyText = ShortcutKeyNames.name(code)
         } else {
             keyCode = nil
         }
