@@ -49,6 +49,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         // item, ToolHUD hub, ShortcutsLens report, updater or Accessibility prompt.
         if AgentSocket.isTestRun {
             _ = Preferences.shared
+            // The Settings shortcut editor, checked on the test copy's own settings.
+            if let shot = ProcessInfo.processInfo.environment["CLICKLENS_DEBUG_SHORTCUT_EDITOR"] {
+                DebugShortcutEditorTest.run(shot: shot)
+                return
+            }
             AgentSocket.listen { AgentRouter.handle($0) }
             return
         }

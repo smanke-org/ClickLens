@@ -12,6 +12,14 @@ final class SettingsWindow: NSObject, NSWindowDelegate {
     private var window: NSWindow?
 
     func show() {
+        makeWindow()
+        NSApp.activate(ignoringOtherApps: true)
+        window?.makeKeyAndOrderFront(nil)
+        // After an update whose notes weren't seen yet.
+        if let window { WhatsNew.shared.present(on: window) }
+    }
+
+    private func makeWindow() {
         if window == nil {
             let tabs = SettingsTabs()
             let window = NSWindow(contentViewController: tabs)
@@ -24,10 +32,6 @@ final class SettingsWindow: NSObject, NSWindowDelegate {
             window.center()
             self.window = window
         }
-        NSApp.activate(ignoringOtherApps: true)
-        window?.makeKeyAndOrderFront(nil)
-        // After an update whose notes weren't seen yet.
-        if let window { WhatsNew.shared.present(on: window) }
     }
 
     /// This version's release notes, when asked for from Settings.
@@ -43,6 +47,15 @@ final class SettingsWindow: NSObject, NSWindowDelegate {
 
     #if DEBUG
     var debugWindow: NSWindow? { window }
+
+    /// Settings on one tab, ordered in but invisible and without taking focus: for self-tests
+    /// that must not show on the shared screen.
+    func debugShowHidden(tab: String) {
+        makeWindow()
+        window?.alphaValue = 0
+        window?.orderFront(nil)
+        (window?.contentViewController as? SettingsTabs)?.select(tab)
+    }
     #endif
 
     /// A size the user dragged to is kept for every pane, and next time.
@@ -200,7 +213,7 @@ struct SpotlightSettings: View {
     var body: some View {
         Form {
             Section {
-                LabeledContent("Shortcut") { ShortcutRecorder(hotKey: $prefs.spotlightHotKey) }
+                LabeledContent("Shortcut") { ShortcutRecorder(hotKey: $prefs.spotlightHotKey, action: .spotlight) }
                 LabeledContent("Spotlight") {
                     Button(effects.spotlightOn ? "Turn Off" : "Turn On") { effects.toggleSpotlight() }
                 }
@@ -261,7 +274,7 @@ struct ClickSettings: View {
                 Toggle("Show rings whenever the spotlight is on", isOn: $prefs.clicksWithSpotlight)
                 LabeledContent("Rings on their own") {
                     HStack {
-                        ShortcutRecorder(hotKey: $prefs.clicksHotKey)
+                        ShortcutRecorder(hotKey: $prefs.clicksHotKey, action: .clicks)
                         Button(effects.clicksOn ? "Turn Off" : "Turn On") { effects.toggleClicks() }
                     }
                 }
@@ -312,7 +325,7 @@ struct KeystrokeSettings: View {
             Section {
                 LabeledContent("Shortcut") {
                     HStack {
-                        ShortcutRecorder(hotKey: $prefs.keystrokesHotKey)
+                        ShortcutRecorder(hotKey: $prefs.keystrokesHotKey, action: .keystrokes)
                         Button(effects.keystrokesOn ? "Turn Off" : "Turn On") { effects.toggleKeystrokes() }
                     }
                 }
@@ -414,7 +427,7 @@ struct BoxSettings: View {
             Section {
                 LabeledContent("Shortcut") {
                     HStack {
-                        ShortcutRecorder(hotKey: $prefs.boxHotKey)
+                        ShortcutRecorder(hotKey: $prefs.boxHotKey, action: .box)
                         Button(effects.boxOn ? "Stop Drawing" : "Start Drawing") { effects.toggleBox() }
                     }
                 }
@@ -449,7 +462,7 @@ struct ArrowSettings: View {
             Section {
                 LabeledContent("Shortcut") {
                     HStack {
-                        ShortcutRecorder(hotKey: $prefs.arrowHotKey)
+                        ShortcutRecorder(hotKey: $prefs.arrowHotKey, action: .arrow)
                         Button(effects.arrowOn ? "Stop Drawing" : "Start Drawing") { effects.toggleArrow() }
                     }
                 }

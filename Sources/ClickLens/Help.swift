@@ -146,7 +146,7 @@ enum Help {
                 ("⌘,", "Settings (from the menu bar menu)"),
                 ("⌘?", "This Help (from ClickLens's menus)"),
             ]),
-            .text("Change any shortcut on its effect's Settings tab: click the shortcut, then press the new keys. ShortcutsLens lists them under their own names."),
+            .text("Change any shortcut on its effect's Settings tab. Click the shortcut to open its editor: turn on the modifier keys (⌃ ⌥ ⇧ ⌘), type a letter, number or symbol, or pick Space, an arrow or an F-key from the keyboard menu, then click Set. Or just press the shortcut while the editor is open. Shortcuts need ⌘, ⌥ or ⌃, except F-keys, which may stand alone. If another ClickLens shortcut has the keys, they move to this one and the other is left with none. Clear removes a shortcut; Esc or Cancel keeps it as it was. ShortcutsLens lists them under their own names."),
         ]),
 
         HelpTopic(id: "sync", title: "Sync and Settings", symbol: "icloud", blocks: [
@@ -187,7 +187,7 @@ enum Help {
             .heading("Keystrokes don't appear"),
             .text("ClickLens needs Accessibility permission. Choose \"Allow Keystroke Display…\" in the menu bar menu, or switch ClickLens on in System Settings › Privacy & Security. If it's on but still not working, remove it and add it again."),
             .heading("A shortcut does nothing"),
-            .text("Another app may use the same keys. Record a different one on the effect's Settings tab."),
+            .text("Another app may use the same keys. Set a different one on the effect's Settings tab. If you press a shortcut in the editor and nothing fills in, another app has those keys."),
             .heading("Esc doesn't reach my app"),
             .text("While a box or arrow waits for Esc, ClickLens takes the key. Press Esc once to clear the marks, or choose \"After a number of seconds\" so they fade on their own."),
         ]),
