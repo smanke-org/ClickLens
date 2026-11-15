@@ -63,12 +63,9 @@ struct ShortcutRecorder: NSViewRepresentable {
             PopoverCloser.shared.onClose[ObjectIdentifier(popover)] = { [weak self] in self?.closed() }
             self.popover = popover
             refresh()
-            #if DEBUG
-            // A self-test's hidden Settings window: keep the editor off the shared screen too.
-            if window?.alphaValue == 0 { popover.animates = false }
-            #endif
             popover.show(relativeTo: bounds, of: self, preferredEdge: .maxY)
             #if DEBUG
+            // A self-test's hidden Settings window: keep the editor off the shared screen too.
             if window?.alphaValue == 0 { popover.contentViewController?.view.window?.alphaValue = 0 }
             #endif
             monitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .flagsChanged]) { [weak model] event in
@@ -89,10 +86,16 @@ struct ShortcutRecorder: NSViewRepresentable {
                 hotKey = key
                 onChange?(key)
             }
-            popover?.close()
+            // Clean up now: popoverDidClose can arrive late, or never, while ClickLens isn't
+            // frontmost, which would leave every shortcut unregistered.
+            let shown = popover
+            closed()
+            shown?.close()
         }
 
+        /// Runs once per popover, from Set/Clear/Cancel or from the popover closing on its own.
         private func closed() {
+            guard popover != nil else { return }
             if let monitor { NSEvent.removeMonitor(monitor) }
             monitor = nil
             if let popover { PopoverCloser.shared.onClose[ObjectIdentifier(popover)] = nil }
@@ -189,9 +192,10 @@ struct ShortcutRecorder: NSViewRepresentable {
 
     /// The key box changed: keep the last character typed and find its key.
     func typed(_ text: String) {
+        // A named key from the menu (“F6”, “Space”) comes back through here: keep it whole.
+        if let code = keyCode, ShortcutKeyNames.name(code) == text { return }
         if text.count > 1, let last = text.last { keyText = String(last); return }
         guard !text.isEmpty else { keyCode = nil; return }
-        if let code = keyCode, ShortcutKeyNames.name(code) == text { return }
         if let (code, needsShift) = ShortcutKeyNames.keyCode(for: text) {
             keyCode = code
             if needsShift { shift = true }

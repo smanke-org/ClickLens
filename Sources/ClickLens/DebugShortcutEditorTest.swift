@@ -57,7 +57,12 @@ enum DebugShortcutEditorTest {
         model.typed("k")
         out.append("bare k: combo \(model.combo?.display ?? "-") problem \(model.problem ?? "-")")
         model.choose(Int(kVK_F6))
-        out.append("F6 alone: combo \(model.combo?.display ?? "-") problem \(model.problem ?? "-")")
+        model.typed(model.keyText)  // the key field echoing the menu's choice
+        out.append("F6 alone: key \(model.keyText) combo \(model.combo?.display ?? "-") problem \(model.problem ?? "-")")
+        model.choose(Int(kVK_Space))
+        model.typed(model.keyText)
+        out.append("Space from menu: key \(model.keyText) code \(model.keyCode.map(String.init) ?? "-")")
+        model.choose(Int(kVK_F6))
         model.command = true
         model.typed("q")
         out.append("⌘Q system: \(model.systemUse ?? "-")")
@@ -95,7 +100,7 @@ enum DebugShortcutEditorTest {
             model.typed("z")
             press(HotKey(keyCode: UInt32(kVK_Escape), modifiers: 0, display: "⎋"), into: model, window: window)
             try? await Task.sleep(for: .milliseconds(400))
-            out.append("after Esc: spotlight \(prefs.spotlightHotKey?.display ?? "none"), editor open \(button.debugModel != nil)")
+            out.append("after Esc: spotlight \(prefs.spotlightHotKey?.display ?? "none"), editor open \(button.debugModel != nil), title \(button.debugTitle)")
         }
 
         // Clear.
