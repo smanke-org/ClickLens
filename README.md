@@ -14,6 +14,12 @@ ClickLens makes your pointer, clicks and keystrokes easy to follow when you pres
 
 Requires macOS 26 or later.
 
+## See it in action
+
+[![Watch the ClickLens demo video](docs/images/clicklens-demo-poster.jpg)](https://stevemanke.com/clicklens/)
+
+[Watch the narrated demo](https://stevemanke.com/clicklens/) (a minute and a half, with captions): the spotlight, click rings, keystrokes on screen, boxes and arrows, and Settings with the shortcut editor. The page in it is a made-up sample.
+
 ## Features
 
 - **Spotlight** (⌃⌥⌘L): dims every screen except a circle around the pointer. You can set the radius, the soft edge, the dim color and strength, the zoom animation, and an automatic turn-off.
